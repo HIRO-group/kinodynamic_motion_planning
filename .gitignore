@@ -1,0 +1,6 @@
+*.cmake
+google*
+*build*
+Makefile
+*CMakeFiles*
+compile_commands.json
