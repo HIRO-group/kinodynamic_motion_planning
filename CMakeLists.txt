@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(kinodynamic_motion_planning VERSION 0.01 LANGUAGES CXX)
+project(kdmp VERSION 0.01 LANGUAGES CXX)
 
 
 find_package(ompl REQUIRED)
