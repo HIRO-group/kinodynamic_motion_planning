@@ -3,6 +3,7 @@ project(kdmp VERSION 0.01 LANGUAGES CXX)
 
 
 find_package(ompl REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

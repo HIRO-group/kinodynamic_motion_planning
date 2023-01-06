@@ -1,24 +1,30 @@
 #include "problems/include/pandaMotion.hpp"
+#include <string.h>
 
-PandaMotionProblem::PandaMotionProblem(std::vector<std::vector<float>> stateBounds,
-    int stateSpaceSize)
+PandaMPWithOptimization::PandaMPWithOptimization(std::vector<std::vector<float>> stateBounds,
+    int stateSpaceSize, std::string problemType) : mStateSpaceSize(stateSpaceSize)
 {
   assert(stateBounds.size() == stateSpaceSize);
   assert(stateBounds[0].size() == 2);
 
-  stateSpace = std::make_shared<omplBase::RealVectorStateSpace>(stateSpaceSize);
+  mStateSpace = std::make_shared<omplBase::RealVectorStateSpace>(stateSpaceSize);
   omplBase::RealVectorBounds stateSpaceBounds(stateSpaceSize);
   for (int i = 0; i < stateSpaceSize; i++) {
     stateSpaceBounds.setLow(i, stateBounds[i][0]);
     stateSpaceBounds.setHigh(i, stateBounds[i][1]);
   }
+  mStateSpace->setBounds(stateSpaceBounds);
 
-  stateSpace->setBounds(stateSpaceBounds);
-
-  controlSpace = std::make_shared<PandaControlTorque>(stateSpace);
-  omplBase::RealVectorBounds controlStateBounds(PANDA_NUM_JOINTS);
-
-  for (int i = 0; i < PANDA_NUM_JOINTS; i++) {
-    controlStateBounds.setLow(i, PANDA_TORQUE_LIMS[i][0]);
+  if (problemType.compare("random")== 0) {
+    setRandomStartGoal();
   }
+}
+
+void PandaMPWithOptimization::setRandomStartGoal(void)
+{
+  mStartState = std::make_shared<omplBase::ScopedState<>>(mStateSpace);
+  mEndState = std::make_shared<omplBase::ScopedState<>>(mStateSpace);
+
+  mStartState->random();
+  mEndState->random();
 }

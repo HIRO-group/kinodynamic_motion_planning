@@ -11,9 +11,9 @@ namespace omplBase = ompl::base;
 class PandaControlSpace : public omplControl::RealVectorControlSpace
 {
   public:
-    PandaControlSpace(const omplBase::StateSpacePtr &stateSpace) : omplControl::RealVectorControlSpace(stateSpace, PANDA_NUM_JOINTS)
+    PandaControlSpace(const omplBase::StateSpacePtr &stateSpace) : omplControl::RealVectorControlSpace(stateSpace, PANDA_NUM_JOINTS + 1)
     {
     }
 
-    virtual void ODE(const oc::ODESolver::StateType& x, const oc::Control* u, oc::ODESolver::StateType& xdot) = 0;
+    virtual void ODE(const omplControl::ODESolver::StateType& x, const omplControl::Control* u, omplControl::ODESolver::StateType& xdot) = 0;
 };
