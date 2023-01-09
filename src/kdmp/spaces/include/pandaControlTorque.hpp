@@ -3,8 +3,10 @@
 #include <ompl/control/ODESolver.h>
 #include <ompl/base/StateSampler.h>
 
-#include <kdmp/spaces/include/pandaControlSpace.hpp>
-#include <kdmp/models/include/franka_model.h>
+// #include "models/include/franka_model.h"
+// #include <kdmp/models/include/franka_model.h>
+#include "kdmp/models/include/franka_model.h"
+#include "kdmp/spaces/include/pandaControlSpace.hpp"
 
 namespace omplControl = ompl::control;
 namespace omplBase = ompl::base;

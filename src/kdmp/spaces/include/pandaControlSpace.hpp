@@ -2,7 +2,7 @@
 #include <ompl/control/SpaceInformation.h>
 #include <ompl/base/StateSampler.h>
 
-#include <spaces/include/pandaConstants.hpp>
+#include <kdmp/spaces/include/pandaConstants.hpp>
 
 
 namespace omplControl = ompl::control;

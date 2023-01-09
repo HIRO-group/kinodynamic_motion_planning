@@ -1,4 +1,2 @@
-add_subdirectory(models)
-add_subdirectory(spaces)
-add_subdirectory(problems)
-add_subdirectory(planners)
+file(GLOB_RECURSE KDMP_SOURCE_CODE models/*.cpp spaces/*.cpp problems/*.cpp planners/*.cpp)
+file(GLOB_RECURSE KDMP_HEADERS models/*.h models/*.hpp spaces/*.hpp base/*.hpp problems/*.hpp planners/*.hpp)

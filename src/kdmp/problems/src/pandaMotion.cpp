@@ -1,4 +1,4 @@
-#include "problems/include/pandaMotion.hpp"
+#include "kdmp/problems/include/pandaMotion.hpp"
 #include <string.h>
 
 PandaMPWithOptimization::PandaMPWithOptimization(std::vector<std::vector<float>> stateBounds,
