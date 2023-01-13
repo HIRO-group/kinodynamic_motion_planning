@@ -1,0 +1,3 @@
+[submodule "models/hiro_panda_moveit"]
+	path = models/hiro_panda_moveit
+	url = git@github.com:HIRO-group/hiro_panda_moveit.git
