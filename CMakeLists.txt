@@ -14,10 +14,10 @@ set(KDMP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/src;${CMAKE_CURRENT_BINARY_DI
 
 find_package(Eigen3 REQUIRED)
 find_package(ompl REQUIRED)
-find_package(jacobi)
 
 include_directories(
     "${OMPL_INCLUDE_DIRS}"
     "${KDMP_INCLUDE_DIRS}")
 
 add_subdirectory(src)
+add_subdirectory(run)

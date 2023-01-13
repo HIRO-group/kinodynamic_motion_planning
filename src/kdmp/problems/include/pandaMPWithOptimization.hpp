@@ -1,16 +1,13 @@
-#include "ompl/base/spaces/RealVectorStateSpace.h"
-#include "kdmp/spaces/include/pandaConstants.hpp"
-#include <ompl/control/SpaceInformation.h>
-#include <ompl/base/ScopedState.h>
+#include <kdmp/problems/include/pandaProblem.hpp>
 
 namespace omplBase = ompl::base;
 
-class PandaMPWithOptimization
+class PandaMPWithOptimization : public PandaProblem
 {
   public:
     PandaMPWithOptimization(std::vector<std::vector<float>> stateBounds = PANDA_JOINT_LIMS,
         int stateSpaceSize=PANDA_NUM_JOINTS, std::string problemType="random");
-
+      
     std::shared_ptr<omplBase::RealVectorStateSpace> mStateSpace;
     std::shared_ptr<omplBase::SpaceInformation> spaceInfo;
 

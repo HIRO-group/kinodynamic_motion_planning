@@ -1,6 +1,5 @@
 #include "kdmp/planners/include/rrtConnectTp.hpp"
-#include "kdmp/problems/include/pandaMotion.hpp"
-
+#include "kdmp/problems/include/pandaMPWithOptimization.hpp"
 
 
 int main(void)

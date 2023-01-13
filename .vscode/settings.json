@@ -60,6 +60,12 @@
     "typeindex": "cpp",
     "typeinfo": "cpp",
     "valarray": "cpp",
-    "variant": "cpp"
+    "variant": "cpp",
+    "codecvt": "cpp",
+    "condition_variable": "cpp",
+    "source_location": "cpp",
+    "iomanip": "cpp",
+    "mutex": "cpp",
+    "cfenv": "cpp"
   }
 }

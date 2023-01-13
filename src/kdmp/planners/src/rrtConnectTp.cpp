@@ -47,12 +47,7 @@ void RRTConnectTimePara::performTimeParameterization()
         mTrajectory = Trajectory();
         return;
     }
-    jacobi::Robot<PANDA_NUM_JOINTS> panda;
     
-    std::vector<jacobi::Config<jacobi::Robot<PANDA_NUM_JOINTS>>> waypoints = 
-            mConfigurations.data();
     
-
-
 
 }

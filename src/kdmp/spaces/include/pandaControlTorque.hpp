@@ -2,7 +2,7 @@
 #include <ompl/control/SpaceInformation.h>
 #include <ompl/control/ODESolver.h>
 #include <ompl/base/StateSampler.h>
-
+#include <ompl/base/ProblemDefinition.h>
 // #include "models/include/franka_model.h"
 // #include <kdmp/models/include/franka_model.h>
 #include "kdmp/models/include/franka_model.h"
@@ -18,6 +18,5 @@ class PandaControlTorque : public PandaControlSpace
     {
     }
     void ODE(const omplControl::ODESolver::StateType& q, const omplControl::Control* c, omplControl::ODESolver::StateType& qdot);
-    
 
 };
