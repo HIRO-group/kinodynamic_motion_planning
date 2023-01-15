@@ -1,0 +1,22 @@
+cmake_minimum_required(VERSION 3.0.2)
+project(kdmp)
+
+find_package(catkin)
+
+catkin_package(CATKIN_DEPENDS pluginlib)
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  rospy
+  std_msgs
+  moveit_ros_planning_interface
+  moveit_visual_tools
+  tf
+  pluginlib
+)
+
+
+add_executable(ompl_planning src/rrtConnectTimePara.cpp)
+target_link_libraries(ompl_planning ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+install(TARGETS ompl_planning DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

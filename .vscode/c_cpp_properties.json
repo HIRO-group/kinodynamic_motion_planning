@@ -1,0 +1,40 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/liam/dev/ws_moveit/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/liam/dev/ws_moveit/src/moveit/moveit_planners/chomp/chomp_motion_planner/include/**",
+        "/home/liam/dev/ws_moveit/src/geometric_shapes/include/**",
+        "/home/liam/dev/ws_moveit/src/kinodynamic_motion_planning/models/hiro_panda_moveit/include/**",
+        "/home/liam/dev/ws_moveit/src/moveit/moveit_planners/chomp/chomp_interface/include/**",
+        "/home/liam/dev/ws_moveit/src/moveit_resources/prbt_ikfast_manipulator_plugin/include/**",
+        "/home/liam/dev/ws_moveit/src/moveit/moveit_ros/benchmarks/include/**",
+        "/home/liam/dev/ws_moveit/src/moveit/moveit_plugins/moveit_ros_control_interface/include/**",
+        "/home/liam/dev/ws_moveit/src/moveit/moveit_ros/move_group/include/**",
+        "/home/liam/dev/ws_moveit/src/moveit/moveit_ros/occupancy_map_monitor/include/**",
+        "/home/liam/dev/ws_moveit/src/moveit/moveit_ros/robot_interaction/include/**",
+        "/home/liam/dev/ws_moveit/src/moveit/moveit_ros/moveit_servo/include/**",
+        "/home/liam/dev/ws_moveit/src/moveit/moveit_setup_assistant/include/**",
+        "/home/liam/dev/ws_moveit/src/moveit/moveit_plugins/moveit_simple_controller_manager/include/**",
+        "/home/liam/dev/ws_moveit/src/moveit_visual_tools/include/**",
+        "/home/liam/dev/ws_moveit/src/moveit/moveit_planners/pilz_industrial_motion_planner/include/**",
+        "/home/liam/dev/ws_moveit/src/moveit/moveit_planners/pilz_industrial_motion_planner_testutils/include/**",
+        "/home/liam/dev/ws_moveit/src/rviz_visual_tools/include/**",
+        "/home/liam/dev/ws_moveit/src/srdfdom/include/**",
+        "/usr/include/**",
+        "/opt/ros/noetic/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}
