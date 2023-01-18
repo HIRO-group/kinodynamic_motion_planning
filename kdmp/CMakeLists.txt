@@ -29,6 +29,8 @@ find_package(catkin REQUIRED COMPONENTS
   panda_moveit_config
 )
 
+find_package(Boost REQUIRED)
+find_package(Boost COMPONENTS system filesystem REQUIRED)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -232,7 +234,8 @@ include_directories(
 # catkin_add_nosetests(test)
 
 add_executable(ompl_planning src/rrtConnectTimePara.cpp)
-target_link_libraries(ompl_planning ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(ompl_planning ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY}
+${Boost_SYSTEM_LIBRARY})
 install(TARGETS ompl_planning DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

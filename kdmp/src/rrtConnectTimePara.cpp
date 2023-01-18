@@ -11,7 +11,8 @@
 #include <moveit_visual_tools/moveit_visual_tools.h>
 #define LOG_NAME = "test"
 #include <boost/scoped_ptr.hpp>
-
+#include <moveit/trajectory_processing/iterative_time_parameterization.h>
+#include <iostream>
 
 int main(int argc, char** argv)
 {
@@ -36,7 +37,7 @@ int main(int argc, char** argv)
   // .. _RobotModelLoader:
   //     http://docs.ros.org/noetic/api/moveit_ros_planning/html/classrobot__model__loader_1_1RobotModelLoader.html
   const std::string PLANNING_GROUP = "panda_arm";
-  const std::string PLANNER_ID = "RRTConnect";
+  const std::string PLANNER_ID = "RRT";
   robot_model_loader::RobotModelLoader robot_model_loader("robot_description");
   const moveit::core::RobotModelPtr& robot_model = robot_model_loader.getModel();
   /* Create a RobotState and JointModelGroup to keep track of the current robot pose and planning group*/
@@ -133,7 +134,8 @@ int main(int argc, char** argv)
   // and 0.01 radians in orientation
   std::vector<double> tolerance_pose(3, 0.01);
   std::vector<double> tolerance_angle(3, 0.01);
-
+  req.max_acceleration_scaling_factor = 1;
+  req.max_velocity_scaling_factor = 1;
   // We will create the request as a constraint using a helper function available
   // from the
   // `kinematic_constraints`_
@@ -162,7 +164,19 @@ int main(int argc, char** argv)
     ROS_ERROR("Could not compute plan successfully");
     return 0;
   }
+  trajectory_processing::IterativeParabolicTimeParameterization iptp(100, 0.05);
+  robot_trajectory::RobotTrajectoryPtr trajectory = res.trajectory_;
+  // iptp.computeTimeStamps(*trajectory);
 
+  int num_waypoints = trajectory->getWayPointCount();
+  std::vector<double> time_diff(num_waypoints - 1, 0.0);
+  for (int i = 0; i < num_waypoints - 1; i++) {
+    time_diff[i] = trajectory->getWayPointDurationFromPrevious(i + 1);
+  }
+  // iptp.updateTrajectory(*trajectory, time_diff);
+  for (int i = 0; i < num_waypoints; i++) {
+    std::cout << trajectory->getWayPoint(i) << std::endl;
+  }
   // Visualize the result
   // ^^^^^^^^^^^^^^^^^^^^
   ros::Publisher display_publisher =
