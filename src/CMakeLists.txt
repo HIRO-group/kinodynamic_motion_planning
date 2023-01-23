@@ -1,4 +1,7 @@
 add_subdirectory(kdmp)
+
+find_package(ompl REQUIRED)
+
 install(DIRECTORY kdmp/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/kdmp"
     COMPONENT kdmp
     FILES_MATCHING 

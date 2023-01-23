@@ -1,4 +1,8 @@
+#ifndef PANDA_CONSTANTS_
+#define PANDA_CONSTANTS_
+
 #include <vector>
+
 
 #define PANDA_CTL_RATE 1000
 #define PANDA_NUM_JOINTS 7
@@ -14,6 +18,4 @@ const std::vector<std::vector<float>> PANDA_JERK_LIMS = {{-7500, 7500}, {-3750, 
 
 const std::vector<std::vector<float>> PANDA_TORQUE_LIMS = {{-87, 87}, {-87, 87}, {-87, 87}, {-87, 87}, {-12, 12}, {-12, 12}, {-12, 12}};
 
-
-
-
+#endif
