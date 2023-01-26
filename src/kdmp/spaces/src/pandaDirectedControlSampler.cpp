@@ -3,14 +3,15 @@
 #include <kdmp/spaces/include/pandaStateSpace.hpp>
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 
-namespace omplBase = ompl::Base;
-namespace omplControl = ompl::Control;
+namespace omplBase = ompl::base;
+namespace omplControl = ompl::control;
 
  unsigned int PandaDirectedControlSampler::sampleTo(omplControl::Control *control, const omplBase::State *source, omplBase::State *dest)
  {
-    const std::vector<double> dstPos = dest->as<PandaStateSpace::StateType>()->values;
+    double *temp = dest->as<PandaStateSpace::StateType>()->values;
+    const std::vector<double> dstPos(temp, temp + si_->getStateDimension());
     double stepSize = si_->getPropagationStepSize();
-    unsigned int steps = propagateMax_ ? si_->getMaxControlDuration() :
+    unsigned int steps = 
         cs_.sampleStepCount(si_->getMinControlDuration(), si_->getMaxControlDuration());
 
     cs_.steer(control, source, dstPos);
@@ -22,7 +23,7 @@ namespace omplControl = ompl::Control;
     // if we found a valid state after one step, we can go on
     if (si_->isValid(dest))
     {
-        ob::State *temp1 = dest, *temp2 = si_->allocState(), *toDelete = temp2;
+        omplBase::State *temp1 = dest, *temp2 = si_->allocState(), *toDelete = temp2;
         unsigned int r = steps;
         for (unsigned int i = 1 ; i < steps ; ++i)
         {

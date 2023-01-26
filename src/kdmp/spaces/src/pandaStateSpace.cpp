@@ -1,6 +1,6 @@
 #include <kdmp/spaces/include/pandaStateSpace.hpp>
 
-#namespace omplBase = ompl::base;
+namespace omplBase = ompl::base;
 
 PandaStateSpace::PandaStateSpace(int numDims) : mNumDims(numDims)
 {
@@ -15,9 +15,4 @@ PandaStateSpace::PandaStateSpace(int numDims) : mNumDims(numDims)
         }
         
     }
-}
-
-void PandaStateSpace::registerProjections()
-{
-    // TODO
 }

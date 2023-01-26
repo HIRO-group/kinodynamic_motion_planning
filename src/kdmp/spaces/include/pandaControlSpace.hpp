@@ -46,7 +46,7 @@ class PandaControlSampler : public omplControl::ControlSampler
 class PandaControlSpace : public omplControl::RealVectorControlSpace
 {
   public:
-    PandaControlSpace(int numDims = PANDA_NUM_JOINTS, PandaControlType controlType);
+    PandaControlSpace(PandaControlType controlType, int numDims = PANDA_NUM_JOINTS);
 
     virtual ompl::control::ControlSamplerPtr allocDefaultControlSampler() const
     {

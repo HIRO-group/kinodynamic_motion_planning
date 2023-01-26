@@ -1,5 +1,24 @@
-cmake_minimum_required(VERSION 3.5)
-project(kdmp VERSION 0.01 LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.0.2)
+project(kdmp_ros)
+
+find_package(Eigen3 REQUIRED)
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+# add_compile_options(-std=c++11)
+
+## Find catkin macros and libraries
+## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
+## is used, also find other catkin packages
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  rospy
+  std_msgs
+)
 
 set(CMAKE_MODULE_PATH
     "${CMAKE_MODULE_PATH}"
@@ -16,8 +35,21 @@ find_package(Eigen3 REQUIRED)
 find_package(ompl REQUIRED)
 
 include_directories(
+    include
+    ${CMAKE_INSTALL_INCLUDEDIR}
     "${OMPL_INCLUDE_DIRS}"
-    "${KDMP_INCLUDE_DIRS}")
+    "${KDMP_INCLUDE_DIRS}"
+    ${catkin_INCLUDE_DIRS}
+)
+
 
 add_subdirectory(src)
-add_subdirectory(run)
+
+add_library( robot_interfaces
+    robot_interfaces/pandaMoveitInterface.cpp
+)
+
+catkin_package()
+
+add_executable(omplRRT execs/omplRRT.cpp)
+target_link_libraries(omplRRT ${catkin_LIBRARIES} robot_interfaces)
