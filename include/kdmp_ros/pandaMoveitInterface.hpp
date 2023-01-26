@@ -4,7 +4,7 @@
 #include <ros/ros.h>
 #include <kdmp/problems/include/RobotInterface.hpp>
 
-class PandaMoveitInterface : RobotInterface
+class PandaMoveitInterface : public RobotInterface
 {
     public:
         PandaMoveitInterface(ros::NodeHandle nh);
