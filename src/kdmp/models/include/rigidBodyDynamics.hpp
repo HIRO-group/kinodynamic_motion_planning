@@ -5,11 +5,11 @@
 #include <kdmp/spaces/include/pandaConstants.hpp>
 #include <kdmp/models/include/franka_model.h>
 
-std::vector<double> acc_from_torque(const std::vector<double> &state, const std::vector<double> &torque)
+static std::vector<double> acc_from_torque(const std::vector<double> &state, const std::vector<double> &torque)
 {
-   auto q = Eigen::Vector7d(std::vector<double>(&state[0], &state[PANDA_NUM_JOINTS - 1]));
-   auto qd = Eigen::Vector7d(std::vector<double>(&state[PANDA_NUM_JOINTS], &state[2 * PANDA_NUM_JOINTS - 1]));
-   auto t = Eigen::Vector7d(torque);
+   auto q = Eigen::vecToEigenVec(std::vector<double>(&state[0], &state[PANDA_NUM_JOINTS - 1]));
+   auto qd = Eigen::vecToEigenVec(std::vector<double>(&state[PANDA_NUM_JOINTS], &state[2 * PANDA_NUM_JOINTS - 1]));
+   auto t = Eigen::vecToEigenVec(torque);
 
    auto M_inv = MassMatrix(q).inverse();
    auto C = CoriolisMatrix(q, qd);

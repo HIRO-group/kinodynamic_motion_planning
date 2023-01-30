@@ -12,7 +12,7 @@
 #include <ompl/control/planners/sst/SST.h>
 
 namespace omplBase = ompl::base;
-namespace omplBase = ompl::control;
+namespace omplControl = ompl::control;
 
 /// @cond IGNORE
 class PandaStateValidityChecker : public ompl::base::StateValidityChecker

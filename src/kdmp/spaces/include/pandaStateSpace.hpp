@@ -2,7 +2,7 @@
 #define PANDA_STATE_SPACE_
 
 #include <ompl/base/spaces/RealVectorStateSpace.h>
-#include <pandaConstants.hpp>
+#include <kdmp/spaces/include/pandaConstants.hpp>
 #include <kdmp/models/include/franka_model.h>
 
 class PandaStateSpace : public ompl::base::RealVectorStateSpace

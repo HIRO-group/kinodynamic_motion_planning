@@ -52,4 +52,4 @@ add_library( robot_interfaces
 catkin_package()
 
 add_executable(omplRRT execs/omplRRT.cpp)
-target_link_libraries(omplRRT ${catkin_LIBRARIES} robot_interfaces ${OMPL_LIBRARIES})
+target_link_libraries(omplRRT ${catkin_LIBRARIES} robot_interfaces ${OMPL_LIBRARIES} )

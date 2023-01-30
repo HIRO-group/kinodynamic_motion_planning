@@ -6,7 +6,8 @@ namespace omplBase = ompl::base;
 namespace omplControl = ompl::control;
 
 PandaControlSpace::PandaControlSpace(PandaControlType controlType, int numDims) :
-        mNumDims(numDims), mControlType(controlType)
+        mNumDims(numDims), mControlType(controlType), ompl::control::RealVectorControlSpace(
+        std::make_shared<PandaStateSpace>(numDims), numDims)
 {
     auto limits = mControlType == VELOCITY_CTL ? PANDA_VEL_LIMS : PANDA_TORQUE_LIMS;
     for (int i = 0; i < PANDA_NUM_JOINTS; i++) {
@@ -52,8 +53,7 @@ void PandaControlSampler::steer(ompl::control::Control *control, const ompl::bas
         t.push_back(std::abs(diff[i]) < std::numeric_limits<float>::epsilon() ? 0 : rng_.uniformReal(0, bounds.high[0]));
         neg_t.push_back(-1*t[i]);
     }
-    std::vector<double> q_vec;
-    std::copy(q, q + space_->getDimension(), q_vec);
+    std::vector<double> q_vec(q, q + space_->getDimension());
     a = acc_from_torque(q_vec, t);
     neg_a = acc_from_torque(q_vec, neg_t);
 

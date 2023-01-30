@@ -11,8 +11,7 @@ class PandaDirectedControlSampler : public ompl::control::DirectedControlSampler
         PandaDirectedControlSampler(const ompl::control::SpaceInformation *si,
             const ompl::base::GoalPtr &goal, bool propagateMax)
             : DirectedControlSampler(si), cs_(si->getControlSpace().get()),
-            goal_(goal), statePropagator_(si->getStatePropagator()),
-            propagateMax_(propagateMax)
+            goal_(goal), statePropagator_(si->getStatePropagator())
         {
         }
 

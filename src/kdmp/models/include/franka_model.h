@@ -12,17 +12,32 @@
 
 
 #include <Eigen/Core>
+#include <vector>
 
 #ifndef INCLUDE_FRANKA_MODEL_H_
 #define INCLUDE_FRANKA_MODEL_H_
 
 #define NUMBER_OF_JOINTS 7
 
+#ifndef EIGEN_7D_VEC_
+#define EIGEN_7D_VEC_
 namespace Eigen {
 
 	typedef Eigen::Matrix< double , NUMBER_OF_JOINTS , NUMBER_OF_JOINTS > Matrix7d;
 	typedef Eigen::Matrix< double , NUMBER_OF_JOINTS , 1 > Vector7d;
+
+	static inline Vector7d vecToEigenVec(std::vector<double> vec) 
+	{
+		Vector7d v;
+		int len = std::min((int)vec.size(), 7);
+		for (int i = 0; i < len; i++) {
+			v[i] = vec[i];
+		}
+		return v;
+	}
+
 }
+#endif
 
 using namespace std;
 
