@@ -10,7 +10,7 @@
  *
  */
 
-#include "kdmp/models/include/franka_model.h"
+#include "franka_model.h"
 
 
 using namespace std;

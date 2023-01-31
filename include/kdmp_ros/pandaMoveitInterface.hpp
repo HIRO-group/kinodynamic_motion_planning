@@ -2,7 +2,10 @@
 #define PANDA_MOVEIT_INTERFACE_
 
 #include <ros/ros.h>
-#include <kdmp/problems/include/RobotInterface.hpp>
+#include <RobotInterface.hpp>
+#include <moveit/robot_state/conversions.h>
+#include <moveit_msgs/DisplayRobotState.h>
+#include <moveit_msgs/GetPositionIK.h>
 
 class PandaMoveitInterface : public RobotInterface
 {
@@ -15,8 +18,9 @@ class PandaMoveitInterface : public RobotInterface
 
     private:
         ros::NodeHandle nh_;
+        ros::ServiceClient ik_service_client_;
+        ros::Publisher robot_state_publisher_;
+
 };
-
-
 
 #endif

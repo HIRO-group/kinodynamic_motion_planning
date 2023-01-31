@@ -4,6 +4,7 @@
 #include <vector>
 #include <pandaConstants.hpp>
 #include <franka_model.h>
+#include <Eigen/LU>
 
 static std::vector<double> acc_from_torque(const std::vector<double> &state, const std::vector<double> &torque)
 {

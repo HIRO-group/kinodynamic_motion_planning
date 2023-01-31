@@ -1,10 +1,10 @@
 
-#include <kdmp/problems/include/pandaSetup.hpp>
-#include <kdmp/problems/include/pandaGoal.hpp>
-#include <kdmp/spaces/include/pandaStateSpace.hpp>
-#include <kdmp/spaces/include/pandaControlSpace.hpp>
-#include <kdmp/spaces/include/pandaStatePropogator.hpp>
-#include <kdmp/spaces/include/pandaDirectedControlSampler.hpp>
+#include <pandaSetup.hpp>
+#include <pandaGoal.hpp>
+#include <pandaStateSpace.hpp>
+#include <pandaControlSpace.hpp>
+#include <pandaStatePropogator.hpp>
+#include <pandaDirectedControlSampler.hpp>
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/control/planners/rrt/RRT.h>
 #include <ompl/control/planners/kpiece/KPIECE1.h>

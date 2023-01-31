@@ -2,8 +2,8 @@
 #define PANDA_GOAL_
 
 #include <ompl/base/goals/GoalLazySamples.h>
-#include <kdmp/problems/include/RobotInterface.hpp>
-#include <kdmp/spaces/include/pandaStateSpace.hpp>
+#include <RobotInterface.hpp>
+#include <pandaStateSpace.hpp>
 
 
 #include <boost/math/constants/constants.hpp>

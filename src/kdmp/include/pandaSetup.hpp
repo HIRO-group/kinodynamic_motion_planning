@@ -2,7 +2,7 @@
 #define PANDA_SETUP_
 
 #include <ompl/control/SimpleSetup.h>
-#include <kdmp/problems/include/RobotInterface.hpp>
+#include <RobotInterface.hpp>
 #include <vector>
 #include <string>
 

@@ -1,7 +1,7 @@
-// #include <kdmp/spaces/include/pandaStatePropogator.hpp>
+// #include <pandaStatePropogator.hpp>
 #include "pandaStatePropogator.hpp"
-#include <kdmp/spaces/include/pandaControlSpace.hpp>
-#include <kdmp/spaces/include/pandaStateSpace.hpp>
+#include <pandaControlSpace.hpp>
+#include <pandaStateSpace.hpp>
 
 PandaStatePropogator::PandaStatePropogator(const ompl::control::SpaceInformationPtr &si) :
         ompl::control::StatePropagator(si)

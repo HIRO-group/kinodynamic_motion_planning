@@ -9,7 +9,6 @@ class PandaStateSpace : public ompl::base::RealVectorStateSpace
 {
     public:
     PandaStateSpace(int numDims = 2 * PANDA_NUM_JOINTS);
-    virtual void registerProjections();
 
     protected:
     int mNumDims;

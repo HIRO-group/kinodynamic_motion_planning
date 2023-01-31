@@ -3,7 +3,7 @@ project(kdmp_ros)
 
 find_package(Eigen3 REQUIRED)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -38,7 +38,6 @@ include_directories(
     include
     ${CMAKE_INSTALL_INCLUDEDIR}
     "${OMPL_INCLUDE_DIRS}"
-    "${KDMP_INCLUDE_DIRS}"
     ${catkin_INCLUDE_DIRS}
 )
 
@@ -48,8 +47,12 @@ add_subdirectory(src)
 add_library( robot_interfaces
     robot_interfaces/pandaMoveitInterface.cpp
 )
-
+target_link_libraries(robot_interfaces kdmp)
+target_include_directories(robot_interfaces PUBLIC 
+                           "src/kdmp/include")
 catkin_package()
 
 add_executable(omplRRT execs/omplRRT.cpp)
-target_link_libraries(omplRRT ${catkin_LIBRARIES} robot_interfaces ${OMPL_LIBRARIES} )
+target_link_libraries(omplRRT ${catkin_LIBRARIES} robot_interfaces ${OMPL_LIBRARIES} kdmp)
+target_include_directories(omplRRT PUBLIC
+                           "include/kdmp_ros/")
