@@ -11,6 +11,8 @@ class RobotInterface
     virtual bool inCollision(std::vector<double> q) = 0;
     virtual void setRobotState(std::vector<double> state) = 0;
     virtual void sendControlCommand(std::vector<double> controlCommand) = 0;
+    virtual std::vector<double> getRandomConfig(void) = 0;
+
 };
 
 #endif

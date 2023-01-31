@@ -46,7 +46,7 @@ class PandaControlSampler : public omplControl::ControlSampler
 class PandaControlSpace : public omplControl::RealVectorControlSpace
 {
   public:
-    PandaControlSpace(PandaControlType controlType = TORQUE_CTL, int numDims = PANDA_NUM_JOINTS);
+    PandaControlSpace(PandaControlType controlType = TORQUE_CTL, int numDims = PANDA_NUM_MOVABLE_JOINTS);
 
     virtual ompl::control::ControlSamplerPtr allocDefaultControlSampler() const
     {

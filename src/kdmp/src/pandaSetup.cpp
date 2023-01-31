@@ -10,7 +10,7 @@
 #include <ompl/control/planners/kpiece/KPIECE1.h>
 #include <ompl/control/planners/est/EST.h>
 #include <ompl/control/planners/sst/SST.h>
-
+#include <iostream>
 namespace omplBase = ompl::base;
 namespace omplControl = ompl::control;
 
@@ -19,15 +19,19 @@ class PandaStateValidityChecker : public ompl::base::StateValidityChecker
 {
 public:
     PandaStateValidityChecker(const ompl::base::SpaceInformationPtr &si, std::shared_ptr<RobotInterface> rbt) : 
-    ompl::base::StateValidityChecker(si), panda(rbt)
+    ompl::base::StateValidityChecker(si), panda(rbt), si_(si)
     {
     }
 
     bool isValid(const omplBase::State *state) const override
     {
-        return si_->satisfiesBounds(state);
+        
+        double *stateVals = state->as<PandaStateSpace::StateType>()->values;
+        std::vector<double> stateVec(stateVals, stateVals + si_->getStateDimension());
+        return si_->satisfiesBounds(state) and not panda->inCollision(stateVec);
     }
     std::shared_ptr<RobotInterface> panda;
+    const ompl::base::SpaceInformationPtr si_;
 };
 /// @endcond
 
@@ -40,8 +44,11 @@ ompl::control::DirectedControlSamplerPtr PandaDirectedControlSamplerAllocator(
 PandaSetup::PandaSetup(const char* plannerName, std::shared_ptr<RobotInterface> robot, std::vector<double> &stateVec)
     : omplControl::SimpleSetup(std::make_shared<PandaControlSpace>(TORQUE_CTL)), panda_(robot)
 {
+    std::cerr<<"in panda setup\n";
     const omplBase::StateSpacePtr &space = getStateSpace();
+    std::cerr<<"got space ptr\n";
     space->setup();
+    std::cerr<<"setup space\n";
     std::vector<double> goalVec(space->getDimension(), 0.0);
     omplBase::ScopedState<> start(space);
     // auto goal = std::make_shared<omplBase::ScopedState<>>(space);
@@ -81,7 +88,7 @@ PandaSetup::PandaSetup(const char* plannerName, std::shared_ptr<RobotInterface> 
     setGoal(std::make_shared<PandaGoal>(si_, panda_, goalVec));
 
     si_->setPropagationStepSize(PANDA_CTL_RATE);
-    si_->setMinMaxControlDuration(0, 200);
+    si_->setMinMaxControlDuration(1, 200);
     
     const omplBase::GoalPtr& goal = getGoal();
     si_->setDirectedControlSamplerAllocator(
