@@ -1,22 +1,41 @@
 #include "kdmp_ros/pandaMoveitInterface.hpp"
+#include "kdmp/include/franka_model.h"
+#include "kdmp/include/pandaConstants.hpp"
 #include "Eigen/Core"
 
-PandaMoveitInterface::PandaMoveitInterface(ros::NodeHandle nh) : nh_(nh)
+PandaMoveitInterface::PandaMoveitInterface(ros::NodeHandle nh) 
+    : nh_(nh), robot_model_(moveit::core::loadTestingRobotModel("panda"))
 {
     ik_service_client_ = nh_.serviceClient<moveit_msgs::GetPositionIK>("compute_ik");
     robot_state_publisher_ =
-      nh_.advertise<moveit_msgs::DisplayRobotState>("tutorial_robot_state", 1);
+      nh_.advertise<moveit_msgs::DisplayRobotState>("robot_state", 1);
 
     while (!ik_service_client_.exists())
     {
         ROS_INFO("Waiting for service");
         ros::Duration(1.0).sleep();
     }
+
+    planning_scene_ = std::make_shared<planning_scene::PlanningScene>(robot_model_);
+    planning_scene_->setActiveCollisionDetector(collision_detection::CollisionDetectorAllocatorBullet::create(),
+                                             /* exclusive = */ true);
 }
 
 bool PandaMoveitInterface::inCollision(std::vector<double> q)
 {
-    return false;
+    robot_state::RobotState& state = planning_scene_->getCurrentStateNonConst();
+    state.setToDefaultValues();
+    state.setJointGroupPositions("panda_arm", Eigen::vecToEigenVec(q));
+    state.update();
+    robot_state::RobotState state_before(state);
+
+    collision_detection::CollisionResult res;
+    collision_detection::CollisionRequest req;
+    req.contacts = true;
+    planning_scene_->checkCollision(req, res);
+    ROS_INFO_STREAM_NAMED("pandaMoveitInterface", (res.collision ? "In collision." : "Not in collision."));
+
+    return res.collision;
 }
 
 std::vector<double> PandaMoveitInterface::inverseKinematics(std::vector<double> eePose)
@@ -52,10 +71,16 @@ std::vector<double> PandaMoveitInterface::inverseKinematics(std::vector<double> 
 
 void PandaMoveitInterface::setRobotState(std::vector<double> state)
 {
-    //no op
+    moveit_msgs::DisplayRobotState newState;
+    currentState_.state.joint_state.position = std::vector<double>(&state[0], &state[PANDA_NUM_JOINTS-1]);
+    currentState_.state.joint_state.velocity = std::vector<double>(&state[PANDA_NUM_JOINTS], &state[2 * PANDA_NUM_JOINTS - 1]);
+    currentState_.state.joint_state.effort = std::vector<double>(PANDA_NUM_JOINTS, 0.0);
+    robot_state_publisher_.publish(currentState_);
 }
 
 void PandaMoveitInterface::sendControlCommand(std::vector<double> controlCommand)
 {
-    // no op
+    currentState_.state.joint_state.effort = controlCommand;
+
+    robot_state_publisher_.publish(currentState_);
 }
