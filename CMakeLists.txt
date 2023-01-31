@@ -15,9 +15,23 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 ## is used, also find other catkin packages
 
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  rospy
-  std_msgs
+    roscpp
+    rospy
+    std_msgs
+    moveit_core
+    moveit_ros_planning
+    moveit_ros_planning_interface
+    moveit_ros_perception
+    rviz_visual_tools
+    moveit_visual_tools
+    pluginlib
+    geometric_shapes
+    pcl_ros
+    pcl_conversions
+    rosbag
+    tf2_ros
+    tf2_eigen
+    tf2_geometry_msgs
 )
 
 set(CMAKE_MODULE_PATH
@@ -47,9 +61,10 @@ add_subdirectory(src)
 add_library( robot_interfaces
     robot_interfaces/pandaMoveitInterface.cpp
 )
-target_link_libraries(robot_interfaces kdmp)
+target_link_libraries(robot_interfaces kdmp ${catkin_LIBRARIES})
 target_include_directories(robot_interfaces PUBLIC 
-                           "src/kdmp/include")
+                           "src/kdmp/include"
+                           )
 catkin_package()
 
 add_executable(omplRRT execs/omplRRT.cpp)

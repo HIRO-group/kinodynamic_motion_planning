@@ -1,6 +1,6 @@
 #include "kdmp_ros/pandaMoveitInterface.hpp"
-#include "kdmp/include/franka_model.h"
-#include "kdmp/include/pandaConstants.hpp"
+#include "franka_model.h"
+#include "pandaConstants.hpp"
 #include "Eigen/Core"
 
 PandaMoveitInterface::PandaMoveitInterface(ros::NodeHandle nh) 
