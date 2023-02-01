@@ -40,12 +40,9 @@ void print_path(std::vector<ompl::base::State *> path)
 
 void SolveProblem(ompl::control::SimpleSetupPtr setup, double timeout, bool write_viz_out)
 {
-     ompl::base::PlannerPtr rrt(new ompl::control::RRT(setup->getSpaceInformation()));
-     setup->setPlanner(rrt);
-
-     ompl::base::PlannerStatus status = setup->solve(timeout);
-
-     if (status == ompl::base::PlannerStatus::EXACT_SOLUTION ||
+    ROS_ERROR("PLANNER SETUP");
+    ompl::base::PlannerStatus status = setup->solve(timeout);
+    if (status == ompl::base::PlannerStatus::EXACT_SOLUTION ||
         status == ompl::base::PlannerStatus::APPROXIMATE_SOLUTION)
     {
         ompl::control::PathControl &pctl = setup->getSolutionPath();
@@ -74,10 +71,10 @@ int main(int argc, char **argv)
     ROS_ERROR("STARTING");
     std::shared_ptr<RobotInterface> robot_interface = std::make_shared<PandaMoveitInterface>(n);
     ROS_ERROR("Created robot interface");
-    std::vector<double> startVec(2 * PANDA_NUM_JOINTS, 0.0);
+    std::vector<double> startVec;
     std::string plannerType = "rrt";
     
     ompl::control::SimpleSetupPtr setup = std::make_shared<PandaSetup>(plannerType.c_str(), robot_interface, startVec);
-    SolveProblem(setup, 5.0, false);
+    SolveProblem(setup, 55.0, false);
     return 0;
 }

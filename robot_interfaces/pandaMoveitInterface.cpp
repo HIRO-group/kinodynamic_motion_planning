@@ -49,7 +49,7 @@ bool PandaMoveitInterface::inCollision(std::vector<double> q)
     collision_detection::CollisionRequest req;
     req.contacts = true;
     planning_scene_->checkCollision(req, res);
-    ROS_INFO_STREAM_NAMED("pandaMoveitInterface", (res.collision ? "In collision." : "Not in collision."));
+    // ROS_INFO_STREAM_NAMED("pandaMoveitInterface", (res.collision ? "In collision." : "Not in collision."));
 
     return res.collision;
 }
@@ -107,4 +107,6 @@ std::vector<double> PandaMoveitInterface::getRandomConfig(void)
     Eigen::VectorXd q;
     kinematic_state_->setToRandomPositions(joint_model_group_);
     kinematic_state_->copyJointGroupPositions(joint_model_group_, q);
+    
+    return std::vector<double>(q.data(), q.data() + q.size());
 }

@@ -55,29 +55,12 @@ PandaSetup::PandaSetup(const char* plannerName, std::shared_ptr<RobotInterface> 
     if (stateVec.size() == space->getDimension()) {
         space->copyFromReals(start.get(), stateVec);
     } else {
-        std::vector<double> startVec(space->getDimension(), 0.);
-        std::vector<double> world_pose_start = {
-            rng_.uniformReal(0.15, 0.5),
-            rng_.uniformReal(-0.5, 0.5),
-            rng_.uniformReal(0.0, 0.5)
-        };
-        std::vector<double> world_pose_goal = {
-            rng_.uniformReal(0.15, 0.5),
-            rng_.uniformReal(-0.5, 0.5),
-            rng_.uniformReal(0.0, 0.5)
-        };
-        std::vector<double> q_start = panda_->inverseKinematics(world_pose_start);
-        for (int i = 0; i< q_start.size(); i++) {
-            startVec[i] = q_start[i];
-        }
+        std::vector<double> startVec = panda_->getRandomConfig();
+        
         space->copyFromReals(start.get(), startVec);
     }
-    std::vector<double> world_pose_goal = {
-        rng_.uniformReal(0.15, 0.5),
-        rng_.uniformReal(-0.5, 0.5),
-        rng_.uniformReal(0.0, 0.5)
-    };
-    std::vector<double> q_goal = panda_->inverseKinematics(world_pose_goal);
+    
+    std::vector<double> q_goal = panda_->getRandomConfig();
 
     for (int i = 0; i< q_goal.size(); i++) {
         goalVec[i] = q_goal[i];
@@ -87,8 +70,8 @@ PandaSetup::PandaSetup(const char* plannerName, std::shared_ptr<RobotInterface> 
     std::vector<double> goalState;
     setGoal(std::make_shared<PandaGoal>(si_, panda_, goalVec));
 
-    si_->setPropagationStepSize(PANDA_CTL_RATE);
-    si_->setMinMaxControlDuration(1, 200);
+    si_->setPropagationStepSize(1 / PANDA_CTL_RATE);
+    si_->setMinMaxControlDuration(PANDA_CTL_RATE/2, MAX_NUM_STEPS);
     
     const omplBase::GoalPtr& goal = getGoal();
     si_->setDirectedControlSamplerAllocator(
