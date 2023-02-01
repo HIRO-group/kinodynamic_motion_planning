@@ -2,6 +2,7 @@
 #include "pandaStatePropogator.hpp"
 #include <pandaControlSpace.hpp>
 #include <pandaStateSpace.hpp>
+#include <kdmpUtils.hpp>
 
 PandaStatePropogator::PandaStatePropogator(const ompl::control::SpaceInformationPtr &si) :
         ompl::control::StatePropagator(si)
@@ -17,6 +18,7 @@ void PandaStatePropogator::propagate(const ompl::base::State *start, const ompl:
 
     std::vector<double> acc = acc_from_torque(state, torque);
 
+    printVec(acc, "acceleration: ");
     int steps = duration / si_->getPropagationStepSize();
     double dt = si_->getPropagationStepSize();
     double *newState = result->as<PandaStateSpace::StateType>()->values;

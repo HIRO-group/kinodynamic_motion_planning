@@ -42,7 +42,7 @@ ompl::control::DirectedControlSamplerPtr PandaDirectedControlSamplerAllocator(
 }
 
 PandaSetup::PandaSetup(const char* plannerName, std::shared_ptr<RobotInterface> robot, std::vector<double> &stateVec)
-    : omplControl::SimpleSetup(std::make_shared<PandaControlSpace>(TORQUE_CTL)), panda_(robot)
+    : omplControl::SimpleSetup(std::make_shared<PandaControlSpace>()), panda_(robot)
 {
     std::cerr<<"in panda setup\n";
     const omplBase::StateSpacePtr &space = getStateSpace();
@@ -67,11 +67,11 @@ PandaSetup::PandaSetup(const char* plannerName, std::shared_ptr<RobotInterface> 
     }
 
     setStartState(start);
-    std::vector<double> goalState;
+    std::vector<double> goalState();
     setGoal(std::make_shared<PandaGoal>(si_, panda_, goalVec));
-
-    si_->setPropagationStepSize(1 / PANDA_CTL_RATE);
-    si_->setMinMaxControlDuration(PANDA_CTL_RATE/2, MAX_NUM_STEPS);
+    double stepSize = 1.0 / PANDA_CTL_RATE; 
+    si_->setPropagationStepSize(stepSize);
+    si_->setMinMaxControlDuration(1, MAX_NUM_STEPS);
     
     const omplBase::GoalPtr& goal = getGoal();
     si_->setDirectedControlSamplerAllocator(

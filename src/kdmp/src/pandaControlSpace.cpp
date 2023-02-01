@@ -1,6 +1,7 @@
 #include <pandaControlSpace.hpp>
 #include <pandaStateSpace.hpp>
 #include <rigidBodyDynamics.hpp>
+#include <kdmpUtils.hpp>
 
 namespace omplBase = ompl::base;
 namespace omplControl = ompl::control;
@@ -23,7 +24,7 @@ void PandaControlSampler::sample(omplControl::Control *control)
     auto *rcontrol =
         control->as<omplControl::RealVectorControlSpace::ControlType>();
     for (int i = 0; i < numDims; i++) {
-        double t = rng_.uniformReal(bounds.low[0], bounds.high[0]);
+        double t = rng_.uniformReal(bounds.low[i], bounds.high[i]);
         rcontrol->values[i] = t;
     }
 }
@@ -47,13 +48,15 @@ void PandaControlSampler::steer(ompl::control::Control *control, const ompl::bas
     const double* q = state->as<PandaStateSpace::StateType>()->values;
     auto *rcontrol =
         control->as<omplControl::RealVectorControlSpace::ControlType>();
-    std::vector<double> diff, t, a, neg_a, neg_t;
-    for (int i = 0; i < 2 * PANDA_NUM_MOVABLE_JOINTS; i++) {
-        diff.push_back(x[i] - q[i]);
-        t.push_back(std::abs(diff[i]) < std::numeric_limits<float>::epsilon() ? 0 : rng_.uniformReal(0, bounds.high[0]));
+    std::vector<double> diff(2*PANDA_NUM_MOVABLE_JOINTS, 0.0), t, a, neg_a, neg_t;
+    for (int i = 0; i < PANDA_NUM_MOVABLE_JOINTS; i++) {
+        diff[i] = (x[i] - q[i]);
+        diff[i + PANDA_NUM_MOVABLE_JOINTS] = x[i + PANDA_NUM_MOVABLE_JOINTS] - q[i + PANDA_NUM_JOINTS];
+
+        t.push_back(std::abs(diff[i]) < std::numeric_limits<float>::epsilon() ? 0.0 : rng_.uniformReal(0, bounds.high[i]));
         neg_t.push_back(-1*t[i]);
     }
-    std::vector<double> q_vec(q, q + space_->getDimension());
+    std::vector<double> q_vec(q, q + 2 * PANDA_NUM_JOINTS);
     a = acc_from_torque(q_vec, t);
     neg_a = acc_from_torque(q_vec, neg_t);
 

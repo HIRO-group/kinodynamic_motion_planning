@@ -4,9 +4,11 @@
 #include <ompl/base/goals/GoalLazySamples.h>
 #include <RobotInterface.hpp>
 #include <pandaStateSpace.hpp>
+#include "kdmpUtils.hpp"
 
 
 #include <boost/math/constants/constants.hpp>
+#include <iostream>
 
 #ifndef PI
 #define PI boost::math::constants::pi<double>()
@@ -34,6 +36,7 @@ class PandaGoal : public ompl::base::GoalLazySamples
             return std::sqrt(dist);
         }
 
+    protected:
         virtual bool sampleGoalThread(ompl::base::State *st) const
         {
             std::vector<double> seed(si_->getStateDimension());
@@ -48,8 +51,6 @@ class PandaGoal : public ompl::base::GoalLazySamples
                 for (size_t i = 0; i < seed.size(); ++i){
                     if (i < PANDA_NUM_MOVABLE_JOINTS) {
                         seed[i] = rng_.uniformReal(bounds_pose[i][0], bounds_pose[i][1]);
-                    } else if (i >= PANDA_NUM_JOINTS and i < 2 * PANDA_NUM_JOINTS - 1){
-                        seed[i] = rng_.uniformReal(bounds_vel[i - PANDA_NUM_JOINTS][0], bounds_vel[i - PANDA_NUM_JOINTS][1]);
                     } else {
                         seed[i] = 0;
                     }
