@@ -2,14 +2,30 @@
 #include "franka_model.h"
 #include "pandaConstants.hpp"
 #include "Eigen/Core"
+#include "Eigen/LU"
+#include "moveit_msgs/ApplyPlanningScene.h"
 
 PandaMoveitInterface::PandaMoveitInterface(ros::NodeHandle nh) 
-    : nh_(nh), robot_model_(moveit::core::loadTestingRobotModel("panda"))
+    : nh_(nh), robot_model_(moveit::core::loadTestingRobotModel("panda")), robot_model_loader_("robot_description")
 {
+    ROS_DEBUG("initializing panda moveit interface");
+
+    kinematic_model_ = robot_model_loader_.getModel();
+    kinematic_state_ = std::make_shared<moveit::core::RobotState>(kinematic_model_);
+    joint_model_group_ = kinematic_model_->getJointModelGroup("panda_arm");
+    
+    currentState_.state.joint_state.name = joint_model_group_->getJointModelNames();
+    for (const auto &name : joint_model_group_->getJointModelNames()) {
+        ROS_ERROR(name.c_str());
+    }
+    kinematic_state_->setToRandomPositions(joint_model_group_);
+    kinematic_state_->copyJointGroupPositions(joint_model_group_,
+                                           currentState_.state.joint_state.position);
+
     ik_service_client_ = nh_.serviceClient<moveit_msgs::GetPositionIK>("compute_ik");
     robot_state_publisher_ =
       nh_.advertise<moveit_msgs::DisplayRobotState>("robot_state", 1);
-
+    
     while (!ik_service_client_.exists())
     {
         ROS_INFO("Waiting for service");
@@ -19,6 +35,7 @@ PandaMoveitInterface::PandaMoveitInterface(ros::NodeHandle nh)
     planning_scene_ = std::make_shared<planning_scene::PlanningScene>(robot_model_);
     planning_scene_->setActiveCollisionDetector(collision_detection::CollisionDetectorAllocatorBullet::create(),
                                              /* exclusive = */ true);
+
 }
 
 bool PandaMoveitInterface::inCollision(std::vector<double> q)
@@ -33,7 +50,7 @@ bool PandaMoveitInterface::inCollision(std::vector<double> q)
     collision_detection::CollisionRequest req;
     req.contacts = true;
     planning_scene_->checkCollision(req, res);
-    ROS_INFO_STREAM_NAMED("pandaMoveitInterface", (res.collision ? "In collision." : "Not in collision."));
+    // ROS_INFO_STREAM_NAMED("pandaMoveitInterface", (res.collision ? "In collision." : "Not in collision."));
 
     return res.collision;
 }
@@ -49,7 +66,7 @@ std::vector<double> PandaMoveitInterface::inverseKinematics(std::vector<double> 
     
 
     service_request.ik_request.group_name = "panda_arm";
-    service_request.ik_request.pose_stamped.header.frame_id = "torso_lift_link";
+    service_request.ik_request.pose_stamped.header.frame_id = "panda_link0";
     service_request.ik_request.pose_stamped.pose.position.x = eePose[0];
     service_request.ik_request.pose_stamped.pose.position.y = eePose[1];
     service_request.ik_request.pose_stamped.pose.position.z = eePose[2];
@@ -58,6 +75,7 @@ std::vector<double> PandaMoveitInterface::inverseKinematics(std::vector<double> 
     service_request.ik_request.pose_stamped.pose.orientation.y = quat.y();
     service_request.ik_request.pose_stamped.pose.orientation.z = quat.z();
     service_request.ik_request.pose_stamped.pose.orientation.w = quat.w();
+    service_request.ik_request.robot_state.joint_state = currentState_.state.joint_state;
 
     service_request.ik_request.avoid_collisions = true;
     ik_service_client_.call(service_request, service_response);
@@ -83,4 +101,13 @@ void PandaMoveitInterface::sendControlCommand(std::vector<double> controlCommand
     currentState_.state.joint_state.effort = controlCommand;
 
     robot_state_publisher_.publish(currentState_);
+}
+
+std::vector<double> PandaMoveitInterface::getRandomConfig(void)
+{
+    Eigen::VectorXd q;
+    kinematic_state_->setToRandomPositions(joint_model_group_);
+    kinematic_state_->copyJointGroupPositions(joint_model_group_, q);
+    
+    return std::vector<double>(q.data(), q.data() + q.size());
 }

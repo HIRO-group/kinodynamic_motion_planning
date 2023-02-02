@@ -12,9 +12,13 @@
 #include <moveit/collision_detection_bullet/collision_env_bullet.h>
 #include <moveit/collision_detection_bullet/collision_detector_allocator_bullet.h>
 #include <moveit/collision_detection/collision_tools.h>
+#include <moveit_msgs/CollisionObject.h>
 #include <moveit/robot_state/conversions.h>
 #include <tf2_eigen/tf2_eigen.h>
 #include <moveit/utils/robot_model_test_utils.h>
+#include <moveit/robot_model_loader/robot_model_loader.h>
+#include <moveit/robot_model/robot_model.h>
+#include <moveit/robot_state/robot_state.h>
 
 class PandaMoveitInterface : public RobotInterface
 {
@@ -24,6 +28,7 @@ class PandaMoveitInterface : public RobotInterface
         virtual bool inCollision(std::vector<double> q);
         virtual void setRobotState(std::vector<double> state);
         virtual void sendControlCommand(std::vector<double> controlCommand);
+        virtual std::vector<double> getRandomConfig(void);
 
     private:
         ros::NodeHandle nh_;
@@ -32,6 +37,10 @@ class PandaMoveitInterface : public RobotInterface
         planning_scene::PlanningScenePtr planning_scene_;
         robot_model::RobotModelPtr robot_model_;
         moveit_msgs::DisplayRobotState currentState_;
+        robot_model_loader::RobotModelLoader robot_model_loader_;
+        moveit::core::RobotModelPtr kinematic_model_;
+        moveit::core::RobotStatePtr kinematic_state_;
+        const moveit::core::JointModelGroup* joint_model_group_;
 
 };
 

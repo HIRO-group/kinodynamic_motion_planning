@@ -4,9 +4,11 @@
 #include <ompl/base/goals/GoalLazySamples.h>
 #include <RobotInterface.hpp>
 #include <pandaStateSpace.hpp>
+#include "kdmpUtils.hpp"
 
 
 #include <boost/math/constants/constants.hpp>
+#include <iostream>
 
 #ifndef PI
 #define PI boost::math::constants::pi<double>()
@@ -16,12 +18,12 @@
 class PandaGoal : public ompl::base::GoalLazySamples
 {
     public:
-        PandaGoal(const ompl::base::SpaceInformationPtr &si, std::shared_ptr<RobotInterface> rbt, const std::vector<double> &goalState, double threshold=0.001)
+        PandaGoal(const ompl::base::SpaceInformationPtr &si, std::shared_ptr<RobotInterface> rbt, const std::vector<double> &goalState, double threshold=0.01)
             : ompl::base::GoalLazySamples(
             si, [this](const ompl::base::GoalLazySamples *, ompl::base::State *st) { return sampleGoalThread(st); },
             true, threshold), stateSampler_(si->allocStateSampler()), goalState_(goalState), panda_(rbt)
         {
-            threshold_ = 0.001;
+            threshold_ = 0.01;
         }
 
         virtual double distanceGoal(const ompl::base::State *st) const
@@ -34,6 +36,7 @@ class PandaGoal : public ompl::base::GoalLazySamples
             return std::sqrt(dist);
         }
 
+    protected:
         virtual bool sampleGoalThread(ompl::base::State *st) const
         {
             std::vector<double> seed(si_->getStateDimension());
@@ -46,10 +49,9 @@ class PandaGoal : public ompl::base::GoalLazySamples
             do
             {
                 for (size_t i = 0; i < seed.size(); ++i){
-                    if (i < PANDA_NUM_JOINTS) {
+                    if (i < PANDA_NUM_MOVABLE_JOINTS) {
                         seed[i] = rng_.uniformReal(bounds_pose[i][0], bounds_pose[i][1]);
                     } else {
-                        int index = i - PANDA_NUM_JOINTS;
                         seed[i] = 0;
                     }
                 }
