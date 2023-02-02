@@ -2,6 +2,8 @@
 #include "franka_model.h"
 #include "pandaConstants.hpp"
 #include "Eigen/Core"
+#include "Eigen/LU"
+#include "moveit_msgs/ApplyPlanningScene.h"
 
 PandaMoveitInterface::PandaMoveitInterface(ros::NodeHandle nh) 
     : nh_(nh), robot_model_(moveit::core::loadTestingRobotModel("panda")), robot_model_loader_("robot_description")
@@ -11,8 +13,7 @@ PandaMoveitInterface::PandaMoveitInterface(ros::NodeHandle nh)
     kinematic_model_ = robot_model_loader_.getModel();
     kinematic_state_ = std::make_shared<moveit::core::RobotState>(kinematic_model_);
     joint_model_group_ = kinematic_model_->getJointModelGroup("panda_arm");
-
-
+    
     currentState_.state.joint_state.name = joint_model_group_->getJointModelNames();
     for (const auto &name : joint_model_group_->getJointModelNames()) {
         ROS_ERROR(name.c_str());

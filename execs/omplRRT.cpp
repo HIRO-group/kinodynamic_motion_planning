@@ -84,6 +84,8 @@ int main(int argc, char **argv)
     std::vector<double> startVec;
     std::string plannerType = "rrt";
     
+    MoveItEnv env(n, "panda_link0");
+    env.createHiroScene("");
     ompl::control::SimpleSetupPtr setup = std::make_shared<PandaSetup>(plannerType.c_str(), robot_interface, startVec);
     SolveProblem(setup, 30.0, false);
     return 0;

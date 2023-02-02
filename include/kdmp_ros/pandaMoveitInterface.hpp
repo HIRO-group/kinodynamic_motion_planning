@@ -12,6 +12,7 @@
 #include <moveit/collision_detection_bullet/collision_env_bullet.h>
 #include <moveit/collision_detection_bullet/collision_detector_allocator_bullet.h>
 #include <moveit/collision_detection/collision_tools.h>
+#include <moveit_msgs/CollisionObject.h>
 #include <moveit/robot_state/conversions.h>
 #include <tf2_eigen/tf2_eigen.h>
 #include <moveit/utils/robot_model_test_utils.h>
@@ -40,7 +41,6 @@ class PandaMoveitInterface : public RobotInterface
         moveit::core::RobotModelPtr kinematic_model_;
         moveit::core::RobotStatePtr kinematic_state_;
         const moveit::core::JointModelGroup* joint_model_group_;
-
 
 };
 

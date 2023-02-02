@@ -14,9 +14,11 @@ void PandaStatePropogator::propagate(const ompl::base::State *start, const ompl:
     double *t = control->as<PandaControlSpace::ControlType>()->values;
     double *x = start->as<PandaStateSpace::StateType>()->values;
 
-    std::vector<double> torque(t, t + PANDA_NUM_MOVABLE_JOINTS), state(x, x + 2 * PANDA_NUM_MOVABLE_JOINTS);
 
+    std::vector<double> torque(t, t + PANDA_NUM_MOVABLE_JOINTS), state(x, x + 2 * PANDA_NUM_MOVABLE_JOINTS);
     std::vector<double> acc = acc_from_torque(state, torque);
+
+    printVec(torque, "Torque: ");
 
     printVec(acc, "acceleration: ");
     int steps = duration / si_->getPropagationStepSize();

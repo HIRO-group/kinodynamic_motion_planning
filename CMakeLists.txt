@@ -19,6 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
     rospy
     std_msgs
     moveit_core
+    moveit_msgs
     moveit_ros_planning
     moveit_ros_planning_interface
     moveit_ros_perception
@@ -34,6 +35,7 @@ find_package(catkin REQUIRED COMPONENTS
     tf2_geometry_msgs
     ompl
 )
+find_package(Eigen3 REQUIRED)
 
 set(CMAKE_MODULE_PATH
     "${CMAKE_MODULE_PATH}"
@@ -61,10 +63,15 @@ add_library( robot_interfaces
 target_link_libraries(robot_interfaces kdmp ${catkin_LIBRARIES})
 target_include_directories(robot_interfaces PUBLIC 
                            "src/kdmp/include"
-                           )
+                          )
+
+add_library(environments 
+    env/moveItEnv.cpp)  
+target_link_libraries(environments ${catkin_LIBRARIES} kdmp)
+      
 catkin_package()
 
 add_executable(omplRRT execs/omplRRT.cpp)
-target_link_libraries(omplRRT ${catkin_LIBRARIES} robot_interfaces kdmp)
+target_link_libraries(omplRRT ${catkin_LIBRARIES} robot_interfaces kdmp environments)
 target_include_directories(omplRRT PUBLIC
                            "include/kdmp_ros/")
