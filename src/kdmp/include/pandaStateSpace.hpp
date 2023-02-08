@@ -8,7 +8,7 @@
 class PandaStateSpace : public ompl::base::RealVectorStateSpace
 {
     public:
-    PandaStateSpace(int numDims = 2 * PANDA_NUM_JOINTS);
+    PandaStateSpace(int numDims = PANDA_NUM_JOINTS * 2);
 
     protected:
     int mNumDims;

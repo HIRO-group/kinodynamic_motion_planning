@@ -8,8 +8,8 @@
 
 static std::vector<double> acc_from_torque(const std::vector<double> &state, const std::vector<double> &torque)
 {
-   auto q = Eigen::vecToEigenVec(std::vector<double>(&state[0], &state[PANDA_NUM_JOINTS - 2]));
-   auto qd = Eigen::vecToEigenVec(std::vector<double>(&state[PANDA_NUM_JOINTS], &state[2 * PANDA_NUM_JOINTS - 2]));
+   auto q = Eigen::vecToEigenVec(std::vector<double>(&state[0], &state[PANDA_NUM_MOVABLE_JOINTS-1]));
+   auto qd = Eigen::vecToEigenVec(std::vector<double>(&state[PANDA_NUM_MOVABLE_JOINTS], &state[2 * PANDA_NUM_MOVABLE_JOINTS -1]));
    auto t = Eigen::vecToEigenVec(torque);
 
    auto M_inv = MassMatrix(q).inverse();

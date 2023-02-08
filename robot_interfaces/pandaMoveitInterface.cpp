@@ -23,6 +23,7 @@ PandaMoveitInterface::PandaMoveitInterface(ros::NodeHandle nh)
                                            currentState_.state.joint_state.position);
 
     ik_service_client_ = nh_.serviceClient<moveit_msgs::GetPositionIK>("compute_ik");
+    fk_service_client_ = nh.serviceClient<moveit_msgs::GetPositionFK>("compute_fk");
     robot_state_publisher_ =
       nh_.advertise<moveit_msgs::DisplayRobotState>("robot_state", 1);
     
@@ -77,6 +78,10 @@ std::vector<double> PandaMoveitInterface::inverseKinematics(std::vector<double> 
     service_request.ik_request.pose_stamped.pose.orientation.w = quat.w();
     service_request.ik_request.robot_state.joint_state = currentState_.state.joint_state;
 
+    kinematic_state_->setToRandomPositions(joint_model_group_);
+    kinematic_state_->copyJointGroupPositions(joint_model_group_, 
+            service_request.ik_request.robot_state.joint_state.position);
+
     service_request.ik_request.avoid_collisions = true;
     ik_service_client_.call(service_request, service_response);
 
@@ -110,4 +115,67 @@ std::vector<double> PandaMoveitInterface::getRandomConfig(void)
     kinematic_state_->copyJointGroupPositions(joint_model_group_, q);
     
     return std::vector<double>(q.data(), q.data() + q.size());
+}
+
+std::vector<double> PandaMoveitInterface::forwardKinematics(std::vector<double> q)
+{
+    robot_state::RobotState& state = planning_scene_->getCurrentStateNonConst();
+    state.setJointGroupPositions("panda_arm", Eigen::vecToEigenVec(q));
+    
+    moveit_msgs::GetPositionFK::Request service_request;
+    moveit_msgs::GetPositionFK::Response service_response;
+
+    kinematic_state_->setToRandomPositions(joint_model_group_);
+    kinematic_state_->copyJointGroupPositions(joint_model_group_, 
+            service_request.robot_state.joint_state.position);
+
+    service_request.fk_link_names = joint_model_group_->getLinkModelNames();
+    service_request.robot_state.joint_state.position = q;
+    service_request.header.frame_id = "panda_link0";
+    fk_service_client_.call(service_request, service_response);
+    
+    geometry_msgs::PoseStamped pose = *(service_response.pose_stamped.end() - 1);
+
+    Eigen::Quaterniond quat = {pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z, pose.pose.orientation.w};
+
+    auto euler = quat.toRotationMatrix().eulerAngles(0, 1, 2);
+
+
+    return std::vector<double>({pose.pose.position.x, pose.pose.position.y, pose.pose.position.z,
+            euler.x(), euler.y(), euler.z()});
+    
+}
+
+std::vector<double> PandaMoveitInterface::eeVelToJointVel(std::vector<double> eeVel, std::vector<double> q)
+{
+    kinematic_state_->setJointGroupPositions(joint_model_group_, q);
+    Eigen::MatrixXd J =  kinematic_state_->getJacobian(joint_model_group_);
+    Eigen::Matrix<double, 6, 1> v;
+    for (int i = 0; i < 6; i++) {
+        v[i] = eeVel[i];
+    }
+
+    Eigen::Vector7d qd = J.inverse() * v;
+
+    return std::vector<double>(qd.data(), qd.data() + qd.size());
+    
+}
+
+std::vector<double> PandaMoveitInterface::jointVelToEeVel(std::vector<double> qd, std::vector<double> q)
+{
+    kinematic_state_->setJointGroupPositions(joint_model_group_, q);
+    Eigen::Vector3d reference_point_position(0.0, 0.0, 0.0);
+    Eigen::MatrixXd J;
+    kinematic_state_->getJacobian(joint_model_group_,
+                             kinematic_state_->getLinkModel(joint_model_group_->getLinkModelNames().back()),
+                             reference_point_position, J);
+    Eigen::Vector7d v;
+    for (int i = 0; i < PANDA_NUM_JOINTS; i++) {
+        v[i] = qd[i];
+    }
+    Eigen::Matrix<double, 6, 1> eeVel = (J * v);
+    ROS_INFO_STREAM("eeVel: \n" << eeVel << "\n");
+    
+    return Eigen::eigenVecTovVec(eeVel);
+    
 }

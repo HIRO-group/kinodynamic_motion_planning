@@ -6,6 +6,7 @@
 #include <moveit/robot_state/conversions.h>
 #include <moveit_msgs/DisplayRobotState.h>
 #include <moveit_msgs/GetPositionIK.h>
+#include <moveit_msgs/GetPositionFK.h>
 #include <moveit/robot_model/robot_model.h>
 #include <moveit/robot_state/robot_state.h>
 #include <moveit/planning_scene/planning_scene.h>
@@ -29,10 +30,16 @@ class PandaMoveitInterface : public RobotInterface
         virtual void setRobotState(std::vector<double> state);
         virtual void sendControlCommand(std::vector<double> controlCommand);
         virtual std::vector<double> getRandomConfig(void);
+        virtual std::vector<double> forwardKinematics(std::vector<double> q);
+        virtual std::vector<double> eeVelToJointVel(std::vector<double> eeVel, std::vector<double> q);
+        virtual std::vector<double> jointVelToEeVel(std::vector<double> qd, std::vector<double> q);
+
 
     private:
         ros::NodeHandle nh_;
         ros::ServiceClient ik_service_client_;
+        ros::ServiceClient fk_service_client_;
+
         ros::Publisher robot_state_publisher_;
         planning_scene::PlanningScenePtr planning_scene_;
         robot_model::RobotModelPtr robot_model_;

@@ -36,6 +36,16 @@ namespace Eigen {
 		return v;
 	}
 
+	template<typename T>
+	static inline std::vector<double> eigenVecTovVec(T eigenVec)
+	{
+		std::vector<double> vec;
+		for (int i = 0; i<eigenVec.size(); i++) {
+			vec.push_back(eigenVec[i]);
+		}
+		return vec;
+	}
+
 }
 #endif
 

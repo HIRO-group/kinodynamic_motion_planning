@@ -9,7 +9,7 @@ namespace omplBase = ompl::base;
 class PandaProblem
 {
     public:
-        PandaProblem(std::vector<std::vector<float>> stateBounds = PANDA_JOINT_LIMS,
+        PandaProblem(std::vector<std::vector<double>> stateBounds = PANDA_JOINT_LIMS,
             int stateSpaceSize=PANDA_NUM_JOINTS);
 
         const std::shared_ptr<omplBase::ProblemDefinition> getProblem(void);

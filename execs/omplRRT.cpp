@@ -13,8 +13,8 @@
 #include "moveItEnv.hpp"
 #include "kdmpUtils.hpp"
 #include "pandaControlSpace.hpp"
+#include <ompl/control/PathControl.h>
 
-#include <ompl/control/SimpleSetup.h>
 #include <ompl/control/planners/rrt/RRT.h>
 
 #include <string>
@@ -65,6 +65,9 @@ void SolveProblem(ompl::control::SimpleSetupPtr setup, double timeout, bool writ
         auto times = pctl.getControlDurations();
         auto ctls = pctl.getControls();
         print_path(path, ctls, times);
+        ROS_INFO_STREAM("goalState: " << Eigen::vecToEigenVec( setup->getGoal()->as<PandaGoal>()->pubGoal_));
+        double *q = path[path.size() - 1]->as<PandaStateSpace::StateType>()->values;
+        ROS_INFO_STREAM("End pose: " << Eigen::vecToEigenVec(std::vector<double>(q, q + PANDA_NUM_JOINTS)));
     }
     else
     {
@@ -87,6 +90,8 @@ int main(int argc, char **argv)
     MoveItEnv env(n, "panda_link0");
     env.createHiroScene("");
     ompl::control::SimpleSetupPtr setup = std::make_shared<PandaSetup>(plannerType.c_str(), robot_interface, startVec);
-    SolveProblem(setup, 30.0, false);
+    // PandaSetupSimple setup = PandaSetupSimple(plannerType.c_str(), robot_interface, startVec);
+
+    SolveProblem(setup, 120, false);
     return 0;
 }

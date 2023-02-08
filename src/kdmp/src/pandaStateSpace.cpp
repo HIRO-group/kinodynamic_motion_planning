@@ -1,6 +1,7 @@
 #include <pandaStateSpace.hpp>
 #include <pandaStatePropogator.hpp>
 #include <iostream>
+#include <math.h>
 
 namespace omplBase = ompl::base;
 
@@ -21,8 +22,7 @@ PandaStateSpace::PandaStateSpace(int numDims) : mNumDims(numDims), RealVectorSta
             std::cerr<<"index: "<<index<<std::endl;
             bounds_.setLow(i, PANDA_VEL_LIMS[index][0]);
             bounds_.setHigh(i, PANDA_VEL_LIMS[index][1]);
-        }
+    }
     }
     std::cerr<<"panda stat set up\n";
 }
-

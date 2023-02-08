@@ -1,6 +1,6 @@
 #include "pandaProblem.hpp"
 
-PandaProblem::PandaProblem(std::vector<std::vector<float>> stateBounds,
+PandaProblem::PandaProblem(std::vector<std::vector<double>> stateBounds,
     int stateSpaceSize) : mStateSpaceSize(stateSpaceSize)
 {
   assert(stateBounds.size() == stateSpaceSize);
