@@ -23,14 +23,15 @@ void PandaStatePropogator::propagate(const ompl::base::State *start, const ompl:
     printVec(acc, "acceleration: ");
     double dt = si_->getPropagationStepSize();
     double *newState = result->as<PandaStateSpace::StateType>()->values;
+    memcpy(newState, &x[0], si_->getStateDimension() * sizeof(double));
     for (int i = 0; i < 1; i++) {
         for (int j = 0; j < PANDA_NUM_MOVABLE_JOINTS; j++) {
-            newState[j] = acc[j] * dt * dt;
-            newState[j + PANDA_NUM_JOINTS] = acc[j] * dt;
+            newState[j] += acc[j] * dt * dt;
+            newState[j + PANDA_NUM_JOINTS] += acc[j] * dt;
         }
         state = std::vector<double>(newState, newState + si_->getStateDimension());
         acc = acc_from_torque(state, torque);
     }
-    
+    printVec(state, "****************************** propogation:");
 
 }

@@ -27,7 +27,7 @@ class PandaGoal : public ompl::base::GoalLazySamples
             si, [this](const ompl::base::GoalLazySamples *, ompl::base::State *st) { return sampleGoalThread(st); },
             true), stateSampler_(si->allocStateSampler()), goalPose_(goalState), panda_(rbt), pubGoal_(goalState)
         {
-            threshold_ = 0.1;
+            threshold_ = 0.001;
             goalQuat_ = Eigen::AngleAxisf(goalState[3], Eigen::Vector3f::UnitX())
                 * Eigen::AngleAxisf(goalState[4], Eigen::Vector3f::UnitY())
                 * Eigen::AngleAxisf(goalState[5], Eigen::Vector3f::UnitZ());
@@ -43,8 +43,10 @@ class PandaGoal : public ompl::base::GoalLazySamples
             const double *state = st->as<PandaStateSpace::StateType>()->values;
             std::vector<double> confVec(state, state + PANDA_NUM_JOINTS);
             std::vector<double> velVec(state + PANDA_NUM_JOINTS + 1, state + 2 * PANDA_NUM_JOINTS);
+
             std::vector<double> poseWorld = panda_->forwardKinematics(confVec);
             std::vector<double> velWorld = panda_->jointVelToEeVel(velVec, confVec);
+
             std::vector<double> stateWorld;
             for (int i = 0; i < poseWorld.size(); i++) {
                 stateWorld.push_back(poseWorld[i]);
@@ -52,6 +54,7 @@ class PandaGoal : public ompl::base::GoalLazySamples
             for (int i = 0; i < velWorld.size(); i++) {
                 stateWorld.push_back(velWorld[i]);
             }
+            
             printVec(confVec, "joint poses: ");
             printVec(velVec, "joint vel: ");
             printVec(stateWorld, "goal test: ");
@@ -110,8 +113,6 @@ class PandaGoal : public ompl::base::GoalLazySamples
                         for(int i = 0; i < 2 * PANDA_NUM_JOINTS - numVals; i++) {
                             q.push_back(0.0);
                         }
-                        std::cout<<"q size: "<< q.size()<<std::endl;
-                        std::cout<<"state size: "<< si_->getStateDimension() << std::endl;
                         // copy values into state
                         memcpy(st->as<PandaStateSpace::StateType>()->values, &q[0],
                             q.size() * sizeof(double));

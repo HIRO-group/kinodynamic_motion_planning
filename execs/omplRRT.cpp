@@ -14,10 +14,13 @@
 #include "kdmpUtils.hpp"
 #include "pandaControlSpace.hpp"
 #include <ompl/control/PathControl.h>
+#include <pandaControlSpace.hpp>
 
 #include <ompl/control/planners/rrt/RRT.h>
 
 #include <string>
+#include <cstdlib>
+#include <unistd.h>
 #include <vector>
 
 void print_path(std::vector<ompl::base::State *> path,std::vector<ompl::control::Control *> ctls, std::vector<double> times)
@@ -51,8 +54,17 @@ void print_path(std::vector<ompl::base::State *> path,std::vector<ompl::control:
     ROS_INFO(ss.str().c_str());
 }
 
+void simPath(const std::vector<double> &times, const std::vector<ompl::control::Control *> &ctls,std::shared_ptr<RobotInterface> robot_interface )
+{
+    for (int i = 0; i < times.size(); i++) {
+        double *cmd = ctls[i]->as<PandaControlSpace::ControlType>()->values;
+        std::vector<double> command(cmd, cmd + PANDA_NUM_JOINTS);
+        robot_interface->sendControlCommand(command);
+         usleep(times[i] * 1000);
+    }
+}
 
-void SolveProblem(ompl::control::SimpleSetupPtr setup, double timeout, bool write_viz_out)
+void SolveProblem(ompl::control::SimpleSetupPtr setup, double timeout, bool write_viz_out, std::shared_ptr<RobotInterface> robot_interface)
 {
     ROS_ERROR("PLANNER SETUP");
     ompl::base::PlannerStatus status = setup->solve(timeout);
@@ -64,16 +76,20 @@ void SolveProblem(ompl::control::SimpleSetupPtr setup, double timeout, bool writ
         auto path = pctl.getStates();
         auto times = pctl.getControlDurations();
         auto ctls = pctl.getControls();
+        
         print_path(path, ctls, times);
         ROS_INFO_STREAM("goalState: " << Eigen::vecToEigenVec( setup->getGoal()->as<PandaGoal>()->pubGoal_));
         double *q = path[path.size() - 1]->as<PandaStateSpace::StateType>()->values;
-        ROS_INFO_STREAM("End pose: " << Eigen::vecToEigenVec(std::vector<double>(q, q + PANDA_NUM_JOINTS)));
+        std::vector<double> qVec(q, q + PANDA_NUM_JOINTS);
+        ROS_INFO_STREAM("End pose: " << Eigen::vecToEigenVec(robot_interface->forwardKinematics(qVec)));
+        simPath(times, ctls, robot_interface);
     }
     else
     {
         ROS_WARN("Planning failed");
     }
 }
+
 
 
 int main(int argc, char **argv)
@@ -92,6 +108,6 @@ int main(int argc, char **argv)
     ompl::control::SimpleSetupPtr setup = std::make_shared<PandaSetup>(plannerType.c_str(), robot_interface, startVec);
     // PandaSetupSimple setup = PandaSetupSimple(plannerType.c_str(), robot_interface, startVec);
 
-    SolveProblem(setup, 120, false);
+    SolveProblem(setup, 10, false, robot_interface);
     return 0;
 }
