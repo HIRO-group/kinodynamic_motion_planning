@@ -33,7 +33,8 @@ class PandaMoveitInterface : public RobotInterface
         virtual std::vector<double> forwardKinematics(std::vector<double> q);
         virtual std::vector<double> eeVelToJointVel(std::vector<double> eeVel, std::vector<double> q);
         virtual std::vector<double> jointVelToEeVel(std::vector<double> qd, std::vector<double> q);
-
+        virtual Eigen::MatrixXd getJacobian(std::vector<double> q);
+        virtual std::vector<double> ddqFromEEAcc(std::vector<double> ee_acc, std::vector<double> dq, std::vector<double> q);
 
     private:
         ros::NodeHandle nh_;
@@ -48,6 +49,7 @@ class PandaMoveitInterface : public RobotInterface
         moveit::core::RobotModelPtr kinematic_model_;
         moveit::core::RobotStatePtr kinematic_state_;
         const moveit::core::JointModelGroup* joint_model_group_;
+        random_numbers::RandomNumberGenerator rng_;
 
 };
 

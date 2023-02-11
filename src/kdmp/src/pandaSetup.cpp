@@ -29,8 +29,9 @@ public:
     {
         
         double *stateVals = state->as<PandaStateSpace::StateType>()->values;
-        std::vector<double> stateVec(stateVals, stateVals + si_->getStateDimension());
-        return si_->satisfiesBounds(state) and not panda->inCollision(stateVec);
+        std::vector<double> q(stateVals, stateVals + PANDA_NUM_MOVABLE_JOINTS);
+
+        return not q.empty() and si_->satisfiesBounds(state) and not panda->inCollision(q);
     }
     std::shared_ptr<RobotInterface> panda;
     const ompl::base::SpaceInformationPtr si_;
@@ -50,24 +51,35 @@ PandaSetup::PandaSetup(const char* plannerName, std::shared_ptr<RobotInterface> 
     const omplBase::StateSpacePtr &space = getStateSpace();
     std::cerr<<"got space ptr\n";
     space->setup();
+    setStateValidityChecker(std::make_shared<PandaStateValidityChecker>(si_, panda_));
+    setStatePropagator(std::make_shared<PandaStatePropogator>(si_, panda_));
     std::cerr<<"setup space\n";
     omplBase::ScopedState<> start(space);
     if (stateVec.size() == space->getDimension()) {
         space->copyFromReals(start.get(), stateVec);
     } else {
+        std::cout<<"startvec setting\n";
         std::vector<double> startVec = panda_->getRandomConfig();
-
-        space->copyFromReals(start.get(), startVec);
+        std::cout<<"startvec size: "<< startVec.size() << std::endl;
+        for(int i = 0; i < PANDA_NUM_JOINTS; i++) {
+            startVec.push_back(0.0);
         }
+        std::cout<<"startvec set\n";
+        space->copyFromReals(start.get(), startVec);
+        std::cout<<"startvec copied to start state\n";
+    }
     
     std::vector<double> goalVec = panda_->forwardKinematics(panda_->getRandomConfig());
+    printVec(goalVec, "goalVec: ");
     for (int i = 0; i < 6; i++) {
         goalVec.push_back(0.0);
     }
-    
+    std::cout<<"goal size: "<<goalVec.size()<<std::endl;
     
     setStartState(start);
+    std::cout<<"set Start state"<<std::endl;
     setGoal(std::make_shared<PandaGoal>(si_, panda_, goalVec));
+    std::cout<<"set goal\n";
     double stepSize = 1.0 / PANDA_CTL_RATE; 
     si_->setPropagationStepSize(stepSize);
     si_->setMinMaxControlDuration(1, MAX_NUM_STEPS);
@@ -80,8 +92,6 @@ PandaSetup::PandaSetup(const char* plannerName, std::shared_ptr<RobotInterface> 
         });
 
     setPlanner(getConfiguredPlannerInstance(plannerName));
-    setStateValidityChecker(std::make_shared<PandaStateValidityChecker>(si_, panda_));
-    setStatePropagator(std::make_shared<PandaStatePropogator>(si_));
 }
 
 omplBase::PlannerPtr PandaSetup::getConfiguredPlannerInstance(const std::string& plannerName)

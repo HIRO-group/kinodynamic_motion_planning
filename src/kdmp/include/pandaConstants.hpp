@@ -8,10 +8,11 @@
 #define PANDA_NUM_JOINTS 8
 #define PANDA_NUM_MOVABLE_JOINTS 7
 #define MAX_PLAN_TIME 180.0
-#define MAX_NUM_STEPS 100000
+#define MAX_NUM_STEPS 1500
 #define PANDA_WORKSPACE_RADIUS 0.7
 #define NUM_CARTESIAN_DIMS 12
 #define PANDA_EE_VEL_LIMIT 2
+
 
 const std::vector<std::vector<double>> PANDA_JOINT_LIMS = {{-2.8973, 2.8973}, {-1.7628, 1.7628}, {-2.8973, 2.8973}, {-3.0718, -0.0698}, {-2.8973, 2.8973}, {-0.0175, 3.7525}, {-2.8973, 2.8973}};
 

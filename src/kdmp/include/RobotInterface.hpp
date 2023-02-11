@@ -2,6 +2,7 @@
 #define INTERFACE_
 
 #include "vector"
+#include "Eigen/Core"
 
 class RobotInterface
 {
@@ -15,6 +16,10 @@ class RobotInterface
     virtual std::vector<double> getRandomConfig(void) = 0;
     virtual std::vector<double> eeVelToJointVel(std::vector<double> eeVel, std::vector<double> q) = 0;
     virtual std::vector<double> jointVelToEeVel(std::vector<double> qd, std::vector<double> q) = 0;
+
+    virtual Eigen::MatrixXd getJacobian(std::vector<double> q) = 0;
+
+    virtual std::vector<double> ddqFromEEAcc(std::vector<double> ee_acc, std::vector<double> dq, std::vector<double> q) = 0;
 
 };
 

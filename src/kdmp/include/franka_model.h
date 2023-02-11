@@ -26,9 +26,9 @@ namespace Eigen {
 	typedef Eigen::Matrix< double , NUMBER_OF_JOINTS , NUMBER_OF_JOINTS > Matrix7d;
 	typedef Eigen::Matrix< double , NUMBER_OF_JOINTS , 1 > Vector7d;
 
-	static inline Vector7d vecToEigenVec(std::vector<double> vec) 
+	static inline VectorXd vecToEigenVec(std::vector<double> vec) 
 	{
-		Vector7d v;
+		VectorXd v;
 		int len = std::min((int)vec.size(), 7);
 		for (int i = 0; i < len; i++) {
 			v[i] = vec[i];

@@ -10,11 +10,13 @@ PandaControlSpace::PandaControlSpace(PandaControlType controlType, int numDims) 
         mNumDims(numDims), mControlType(controlType), ompl::control::RealVectorControlSpace(
         std::make_shared<PandaStateSpace>(), numDims)
 {
-    auto limits = PANDA_TORQUE_LIMS;
-    for (int i = 0; i < numDims; i++) {
-        bounds_.setLow(i, limits[i][0]);
-        bounds_.setHigh(i, limits[i][1]);
-    }
+    // auto limits = PANDA_TORQUE_LIMS;
+    // for (int i = 0; i < numDims; i++) {
+    //     bounds_.setLow(i, limits[i][0]);
+    //     bounds_.setHigh(i, limits[i][1]);
+    // }
+    bounds_.setLow(-0.8);
+    bounds_.setHigh(0.8);
 }
 
 void PandaControlSampler::sample(omplControl::Control *control)

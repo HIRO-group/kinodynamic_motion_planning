@@ -40,13 +40,15 @@ class PandaGoal : public ompl::base::GoalLazySamples
         */
         virtual double distanceGoal(const ompl::base::State *st) const
         {
+            std::cout<<"in distance goal \n";
             const double *state = st->as<PandaStateSpace::StateType>()->values;
-            std::vector<double> confVec(state, state + PANDA_NUM_JOINTS);
-            std::vector<double> velVec(state + PANDA_NUM_JOINTS + 1, state + 2 * PANDA_NUM_JOINTS);
-
+            std::vector<double> confVec(state, state + PANDA_NUM_MOVABLE_JOINTS);
+            std::vector<double> velVec(state + PANDA_NUM_JOINTS + 1, state + 2 * PANDA_NUM_JOINTS - 1);
+            std::cout<<"setup vel and conf vecs\n";
             std::vector<double> poseWorld = panda_->forwardKinematics(confVec);
+            std::cout<<"did fk\n";
             std::vector<double> velWorld = panda_->jointVelToEeVel(velVec, confVec);
-
+            std::cout<<"did qd to ee vel \n";
             std::vector<double> stateWorld;
             for (int i = 0; i < poseWorld.size(); i++) {
                 stateWorld.push_back(poseWorld[i]);
@@ -90,18 +92,23 @@ class PandaGoal : public ompl::base::GoalLazySamples
         */
         virtual bool sampleGoalThread(ompl::base::State *st) const
         {
-            std::vector<double> seed(si_->getStateDimension());
-
+            std::cout << "in goal thread sample\n";
+            std::vector<double> goalPose(goalPose_.begin(), goalPose_.begin() + 6);
             bool good = false;
+            std::cout << "goal Pose extracted";
             unsigned int maxTries = 1000;
             unsigned int tries = 0; 
-            auto bounds_pose = PANDA_JOINT_LIMS;
-            auto bounds_vel = PANDA_VEL_LIMS;
+
             do
             {
                 for (size_t i = 0; i < 10 && !good; ++i)
                 {
-                    std::vector<double> q = panda_->inverseKinematics(goalPose_);
+                    printVec(goalPose);
+                    std::vector<double> q = panda_->inverseKinematics(goalPose);
+                    
+                    if (q.empty()) {
+                        continue;
+                    }
                     std::cout<< "ik state size: "<< q.size() <<std::endl;
                     while (q.size() > PANDA_NUM_MOVABLE_JOINTS) {
                         q.pop_back();
