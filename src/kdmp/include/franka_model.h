@@ -14,6 +14,7 @@
 #include <Eigen/Core>
 #include <vector>
 
+
 #ifndef INCLUDE_FRANKA_MODEL_H_
 #define INCLUDE_FRANKA_MODEL_H_
 
@@ -28,8 +29,9 @@ namespace Eigen {
 
 	static inline VectorXd vecToEigenVec(std::vector<double> vec) 
 	{
-		VectorXd v;
+		
 		int len = std::min((int)vec.size(), 7);
+		VectorXd v(len, 1);
 		for (int i = 0; i < len; i++) {
 			v[i] = vec[i];
 		}

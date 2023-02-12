@@ -37,30 +37,30 @@ void PandaStatePropogator::propagate_temp(const ompl::base::State *start, const 
     printVec(state, "****************************** propogation:");
 }
 
+static int isState = 1;
+
 void PandaStatePropogator::propagate(const ompl::base::State *start, const ompl::control::Control* control,
                 const double duration, ompl::base::State *result) const
 {
     double *t = control->as<PandaControlSpace::ControlType>()->values;
     double *x = start->as<PandaStateSpace::StateType>()->values;
     double *q_next = result->as<PandaStateSpace::StateType>()->values;
-    std::cout << "in propogate!!!"<<std::endl;
     std::vector<double> eeVel(t, t + 6), state(x, x + 2 * PANDA_NUM_JOINTS);
     std::vector<double> q(x, x+PANDA_NUM_JOINTS);
     std::vector<double> dq = panda_->eeVelToJointVel(eeVel, q);
     std::vector<double> ee_acc(PANDA_NUM_MOVABLE_JOINTS, 0.0);
-    std::cout << "eevel to joint vel worked"<<std::endl;
-    std::vector<double> ddq = panda_->ddqFromEEAcc(ee_acc, dq, q);
-    auto boundsA = PANDA_ACC_LIMS;
+    std::vector<double> ddq(panda_->ddqFromEEAcc(ee_acc, dq, q));
+    std::vector<std::vector<double>> boundsA = PANDA_ACC_LIMS;
     for (int i = 0; i < PANDA_NUM_MOVABLE_JOINTS; i++) {
         if (boundsA[i][0] > ddq[i] or boundsA[i][1] < ddq[i]) {
             double inf = std::numeric_limits<double>::infinity();
             for (int j = 0; j < 2 * PANDA_NUM_JOINTS; j++) {
                 q_next[j] = inf;
             }
+            // std::cout<<" ACC out of bounds!\n";
             return;
         }
     }
-
     std::vector<double> tau = get_tau(q, dq, ddq);
     auto boundsT = PANDA_TORQUE_LIMS;
     for (int i = 0; i < PANDA_NUM_MOVABLE_JOINTS; i++) {
@@ -69,21 +69,28 @@ void PandaStatePropogator::propagate(const ompl::base::State *start, const ompl:
             for (int j = 0; j < 2 * PANDA_NUM_JOINTS; j++) {
                 q_next[j] = inf;
             }
+            std::cout<<"TAU out of bounds!\n";
             return;
         }
     }
-
     // simulate control
     double rtol = 10E-12;
-    odeData *data;
-    data->tau = tau;
+    odeData data;
+    for (auto &t : tau) {
+        data.tau.push_back(t);
+    }
     double s_time = 0.0;
     std::vector<double> sol;
     int isState = 1;
     LSODA lsoda_temp;
-    lsoda_temp.lsoda_update(PandaOde, PANDA_NUM_JOINTS * 2, state, sol, &s_time, duration, &isState, (void *)data, rtol);
-
+    std::stringstream ss;
+    ss<< "**NEWSTATE: [";
+    lsoda_temp.lsoda_update(PandaOde, PANDA_NUM_JOINTS * 2, state, sol, &s_time, duration, &isState, (void *)&data, rtol);
+    isState = 2;
     for(int i = 0; i < PANDA_NUM_JOINTS * 2; i++) {
         q_next[i] = sol[i];
+        ss<<sol[i]<<", ";
     }
+    ss<<"]\n";
+    std::cout<<ss.str();
 }

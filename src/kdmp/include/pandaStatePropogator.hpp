@@ -24,6 +24,7 @@ class PandaStatePropogator : public ompl::control::StatePropagator
     private:
         LSODA lsoda;
         std::shared_ptr<RobotInterface> panda_;
+        int mIsState = 1;
 };
 
 

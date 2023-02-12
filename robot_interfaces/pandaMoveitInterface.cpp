@@ -191,15 +191,10 @@ std::vector<double> PandaMoveitInterface::jointVelToEeVel(std::vector<double> qd
 
  std::vector<double> PandaMoveitInterface::ddqFromEEAcc(std::vector<double> ee_acc, std::vector<double> dq, std::vector<double> q)
  {
-    std::cout<< "in ddq\n";
     Eigen::Matrix<double, 6, 7> J = getJacobian(q).block<6,7>(0,0);
-    std::cout<<"got jacobian \n";
     Eigen::Matrix<double, 6, 7> Jdot = get_jacobian_derivative(J, dq);
-    std::cout<<"got jacobian derivative \n";
     Eigen::Matrix<double, 6, 1> ee_aack = Eigen::vecToEigenVec(ee_acc);
     Eigen::Vector7d dqE = Eigen::vecToEigenVec(dq);
-
     Eigen::Vector7d ddq = J.transpose() * (ee_aack - Jdot * dqE);
-
     return Eigen::eigenVecTovVec(ddq);
  }

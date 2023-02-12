@@ -2,7 +2,7 @@
     <include file="$(find panda_moveit_config)/launch/demo.launch" />
 
 
-    <node name="omplRRT_node" pkg="kdmp_ros" type="omplRRT" output="screen" launch-prefix="gdb -ex run --args"/>
+    <node name="omplRRT_node" pkg="kdmp_ros" type="omplRRT" output="screen"/>
 
 
 </launch>
