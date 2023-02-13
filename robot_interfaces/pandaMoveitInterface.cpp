@@ -180,7 +180,7 @@ std::vector<double> PandaMoveitInterface::jointVelToEeVel(std::vector<double> qd
         v[i] = qd[i];
     }
     Eigen::Matrix<double, 6, 1> eeVel = (J * v);
-    ROS_INFO_STREAM("eeVel: \n" << eeVel << "\n");
+    // ROS_INFO_STREAM("eeVel: \n" << eeVel << "\n");
     
     return Eigen::eigenVecTovVec(eeVel);
 }

@@ -41,7 +41,6 @@ class PandaGoal : public ompl::base::GoalLazySamples
         */
         virtual double distanceGoal(const ompl::base::State *st) const
         {
-            std::cout<<"in distance goal \n";
             const double *state = st->as<PandaStateSpace::StateType>()->values;
             std::vector<double> confVec(state, state + PANDA_NUM_MOVABLE_JOINTS);
             std::vector<double> velVec(state + PANDA_NUM_JOINTS + 1, state + 2 * PANDA_NUM_JOINTS - 1);
@@ -56,6 +55,22 @@ class PandaGoal : public ompl::base::GoalLazySamples
             }
             if (std::find(stateWorld.begin(), stateWorld.end(), std::numeric_limits<double>().infinity()) not_eq stateWorld.end()) {
                 return std::numeric_limits<double>().infinity();
+            }
+            if (std::find(stateWorld.begin(), stateWorld.end(), std::numeric_limits<double>().infinity()) not_eq stateWorld.end()) {
+            return std::numeric_limits<double>().infinity();
+            }
+            if (std::fabs(stateWorld[1]) > 0.8 or std::fabs(stateWorld[2]) > 0.8 or 
+                std::isnan(std::fabs(stateWorld[1])) or std::isnan(std::fabs(stateWorld[2]))) {
+                return std::numeric_limits<double>().infinity();
+            }
+            if (stateWorld[2] > 1.19 or stateWorld[2] < -0.360 or 
+                std::isnan(std::fabs(stateWorld[2]))) {
+                return std::numeric_limits<double>().infinity();
+            }
+            for (int i = 0; i < 6; i++) {
+                if(std::fabs(stateWorld[i + 6]) > 0.8 or std::isnan(std::fabs(stateWorld[i + 6]))) {
+                    return std::numeric_limits<double>().infinity();
+                }
             }
             printVec(stateWorld, "################### goal test: ");
             printVec(goalPose_, "#################### goal: ");
@@ -93,7 +108,6 @@ class PandaGoal : public ompl::base::GoalLazySamples
         */
         virtual bool sampleGoalThread(ompl::base::State *st) const
         {
-            std::cout << "in goal thread sample\n";
             std::vector<double> goalPose(goalPose_.begin(), goalPose_.begin() + 6);
             bool good = false;
             std::cout << "goal Pose extracted";

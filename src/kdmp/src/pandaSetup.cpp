@@ -5,13 +5,16 @@
 #include <pandaControlSpace.hpp>
 #include <pandaStatePropogator.hpp>
 #include <pandaDirectedControlSampler.hpp>
+
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/control/planners/rrt/RRT.h>
 #include <ompl/control/planners/kpiece/KPIECE1.h>
 #include <ompl/control/planners/est/EST.h>
 #include <ompl/control/planners/sst/SST.h>
 #include <ompl/control/SimpleDirectedControlSampler.h>
+
 #include <iostream>
+#include <chrono>
 
 namespace omplBase = ompl::base;
 namespace omplControl = ompl::control;
@@ -61,7 +64,12 @@ public:
                 return false;
             }
         }
-        return si_->satisfiesBounds(state) and not panda->inCollision(q);
+        auto start = chrono::high_resolution_clock::now();
+        bool isInCollision = panda->inCollision(q);
+        auto stop = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
+        std::cout << "In collision took this many ms: "<< duration.count() << endl;
+        return si_->satisfiesBounds(state) and not isInCollision;
     }
     std::shared_ptr<RobotInterface> panda;
     const ompl::base::SpaceInformationPtr si_;
