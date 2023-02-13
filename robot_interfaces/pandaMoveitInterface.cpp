@@ -123,33 +123,40 @@ std::vector<double> PandaMoveitInterface::getRandomConfig(void)
 std::vector<double> PandaMoveitInterface::forwardKinematics(std::vector<double> q)
 {
     kinematic_state_->setJointGroupPositions(joint_model_group_, q);
-    
-    moveit_msgs::GetPositionFK::Request service_request;
-    moveit_msgs::GetPositionFK::Response service_response;
-    std::cout<<"in forward kinematics\n";
-    service_request.fk_link_names = joint_model_group_->getLinkModelNames();
-    service_request.robot_state.joint_state.position = q;
-    service_request.header.frame_id = "panda_link0";
-    std::cout<<"calling fk \n";
-    fk_service_client_.call(service_request, service_response);
-    std::cout<<"called fk \n";
-    geometry_msgs::PoseStamped pose = *(service_response.pose_stamped.end() - 1);
-    std::cout<<"Pose stamped \n";
-    Eigen::Quaterniond quat = {pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z, pose.pose.orientation.w};
+    const Eigen::Affine3d &end_effector_state = kinematic_state_->getGlobalLinkTransform("panda_link8");
+    auto trans =  end_effector_state.translation();
+    auto rot = end_effector_state.rotation().eulerAngles(0, 1, 2);
+    return std::vector<double>({trans.x(), trans.y(), trans.z(), rot.x(), rot.y(), rot.z()});
+    // moveit_msgs::GetPositionFK::Request service_request;
+    // moveit_msgs::GetPositionFK::Response service_response;
+    // std::cout<<"in forward kinematics\n";
+    // service_request.fk_link_names = joint_model_group_->getLinkModelNames();
+    // service_request.robot_state.joint_state.position = q;
+    // service_request.header.frame_id = "panda_link0";
+    // std::cout<<"calling fk \n";
+    // fk_service_client_.call(service_request, service_response);
+    // std::cout<<"called fk \n";
+    // geometry_msgs::PoseStamped pose = *(service_response.pose_stamped.end() - 1);
+    // std::cout<<"Pose stamped \n";
+    // Eigen::Quaterniond quat = {pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z, pose.pose.orientation.w};
 
-    auto euler = quat.toRotationMatrix().eulerAngles(0, 1, 2);
+    // auto euler = quat.toRotationMatrix().eulerAngles(0, 1, 2);
 
 
-    return std::vector<double>({pose.pose.position.x, pose.pose.position.y, pose.pose.position.z,
-            euler.x(), euler.y(), euler.z()});
+    // return std::vector<double>({pose.pose.position.x, pose.pose.position.y, pose.pose.position.z,
+    //         euler.x(), euler.y(), euler.z()});
     
 }
 
 std::vector<double> PandaMoveitInterface::eeVelToJointVel(std::vector<double> eeVel, std::vector<double> q)
 {
     kinematic_state_->setJointGroupPositions(joint_model_group_, q);
-    Eigen::MatrixXd J =  kinematic_state_->getJacobian(joint_model_group_);
+    Eigen::Vector3d reference_point_position(0.0, 0.0, 0.0);
+    Eigen::MatrixXd J;
     Eigen::Matrix<double, 6, 1> v;
+    kinematic_state_->getJacobian(joint_model_group_,
+                             kinematic_state_->getLinkModel(joint_model_group_->getLinkModelNames().back()),
+                             reference_point_position, J);
     for (int i = 0; i < 6; i++) {
         v[i] = eeVel[i];
     }
@@ -169,7 +176,7 @@ std::vector<double> PandaMoveitInterface::jointVelToEeVel(std::vector<double> qd
                              kinematic_state_->getLinkModel(joint_model_group_->getLinkModelNames().back()),
                              reference_point_position, J);
     Eigen::Vector7d v;
-    for (int i = 0; i < PANDA_NUM_JOINTS; i++) {
+    for (int i = 0; i < PANDA_NUM_MOVABLE_JOINTS; i++) {
         v[i] = qd[i];
     }
     Eigen::Matrix<double, 6, 1> eeVel = (J * v);

@@ -84,13 +84,9 @@ void PandaStatePropogator::propagate(const ompl::base::State *start, const ompl:
     int isState = 1;
     LSODA lsoda_temp;
     std::stringstream ss;
-    ss<< "**NEWSTATE: [";
     lsoda_temp.lsoda_update(PandaOde, PANDA_NUM_JOINTS * 2, state, sol, &s_time, duration, &isState, (void *)&data, rtol);
     isState = 2;
     for(int i = 0; i < PANDA_NUM_JOINTS * 2; i++) {
-        q_next[i] = sol[i];
-        ss<<sol[i]<<", ";
+        q_next[i] = sol[i+1];
     }
-    ss<<"]\n";
-    std::cout<<ss.str();
 }

@@ -23,7 +23,7 @@
 #include <unistd.h>
 #include <vector>
 
-void print_path(std::vector<ompl::base::State *> path,std::vector<ompl::control::Control *> ctls, std::vector<double> times)
+void print_path(std::vector<ompl::base::State *> path,std::vector<ompl::control::Control *> ctls, std::vector<double> times, std::shared_ptr<RobotInterface> rbt)
 {
     std::stringstream ss;
     for (int i = 0; i < path.size(); i++) {
@@ -31,9 +31,12 @@ void print_path(std::vector<ompl::base::State *> path,std::vector<ompl::control:
         
         ss << "State "<< i << ":\n";
         ss << "q : ";
+        double *q = state->as<PandaStateSpace::StateType>()->values;
+        std::vector<double> qVec(q, q + PANDA_NUM_JOINTS);
         for (int i = 0; i < PANDA_NUM_JOINTS; i++) {
             ss << state->as<PandaStateSpace::StateType>()->values[i] << " ";
         }
+        ss << "\neeState: " << vecToString(rbt->forwardKinematics(qVec));
         ss << "\n" << "qd : ";
         for (int i = PANDA_NUM_JOINTS; i < 2 * PANDA_NUM_JOINTS; i++) {
             ss << state->as<PandaStateSpace::StateType>()->values[i] << " ";
@@ -77,9 +80,10 @@ void SolveProblem(ompl::control::SimpleSetupPtr setup, double timeout, bool writ
         auto times = pctl.getControlDurations();
         auto ctls = pctl.getControls();
         
-        print_path(path, ctls, times);
-        ROS_INFO_STREAM("goalState: " << Eigen::vecToEigenVec( setup->getGoal()->as<PandaGoal>()->pubGoal_));
-        double *q = path[path.size() - 1]->as<PandaStateSpace::StateType>()->values;
+        print_path(path, ctls, times, robot_interface);
+        std::vector<double> goalVec(setup->getGoal()->as<PandaGoal>()->pubGoal_);
+        ROS_INFO_STREAM("goalState: " << Eigen::vecToEigenVec( std::vector<double>(goalVec.begin(), goalVec.begin() + 6)));
+        double *q = (*(path.end()-1))->as<PandaStateSpace::StateType>()->values;
         std::vector<double> qVec(q, q + PANDA_NUM_JOINTS);
         ROS_INFO_STREAM("End pose: " << Eigen::vecToEigenVec(robot_interface->forwardKinematics(qVec)));
         simPath(times, ctls, robot_interface);
@@ -108,6 +112,6 @@ int main(int argc, char **argv)
     ompl::control::SimpleSetupPtr setup = std::make_shared<PandaSetup>(plannerType.c_str(), robot_interface, startVec);
     // PandaSetupSimple setup = PandaSetupSimple(plannerType.c_str(), robot_interface, startVec);
 
-    SolveProblem(setup, 30, false, robot_interface);
+    SolveProblem(setup, 120, false, robot_interface);
     return 0;
 }

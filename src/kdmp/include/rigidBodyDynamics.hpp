@@ -70,12 +70,14 @@ static void PandaOde(double t, double* y, double* ydot, void* data)
    std::vector<double> dq(y + PANDA_NUM_JOINTS, y + 2 * PANDA_NUM_JOINTS);
    std::vector<double> ddq = acc_from_torque(state, panda_data->tau);
 
-   printVec(ddq, "####ddq: ");
-   for (int i = 0; i < PANDA_NUM_JOINTS; i++)
+   // printVec(ddq, "####ddq: ");
+   for (int i = 0; i < PANDA_NUM_MOVABLE_JOINTS; i++)
    {
       ydot[i] = dq[i];
       ydot[i+PANDA_NUM_JOINTS] = ddq[i];
    }
+   ydot[PANDA_NUM_JOINTS - 1] = 0.0;
+   ydot[2*PANDA_NUM_MOVABLE_JOINTS - 1] = 0.0;
    // ydot[PANDA_NUM_MOVABLE_JOINTS] = 0.0;
    // ydot[2 * PANDA_NUM_JOINTS -1] = 0.0;
 }

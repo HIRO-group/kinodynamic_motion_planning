@@ -9,6 +9,7 @@
 
 #include <boost/math/constants/constants.hpp>
 #include <iostream>
+#include <algorithm>
 
 #include "Eigen/Core"
 #include <Eigen/LU>
@@ -27,7 +28,7 @@ class PandaGoal : public ompl::base::GoalLazySamples
             si, [this](const ompl::base::GoalLazySamples *, ompl::base::State *st) { return sampleGoalThread(st); },
             true), stateSampler_(si->allocStateSampler()), goalPose_(goalState), panda_(rbt), pubGoal_(goalState)
         {
-            threshold_ = 0.001;
+            // threshold_ = 0.00001;
             goalQuat_ = Eigen::AngleAxisf(goalState[3], Eigen::Vector3f::UnitX())
                 * Eigen::AngleAxisf(goalState[4], Eigen::Vector3f::UnitY())
                 * Eigen::AngleAxisf(goalState[5], Eigen::Vector3f::UnitZ());
@@ -44,11 +45,8 @@ class PandaGoal : public ompl::base::GoalLazySamples
             const double *state = st->as<PandaStateSpace::StateType>()->values;
             std::vector<double> confVec(state, state + PANDA_NUM_MOVABLE_JOINTS);
             std::vector<double> velVec(state + PANDA_NUM_JOINTS + 1, state + 2 * PANDA_NUM_JOINTS - 1);
-            std::cout<<"setup vel and conf vecs\n";
             std::vector<double> poseWorld = panda_->forwardKinematics(confVec);
-            std::cout<<"did fk\n";
             std::vector<double> velWorld = panda_->jointVelToEeVel(velVec, confVec);
-            std::cout<<"did qd to ee vel \n";
             std::vector<double> stateWorld;
             for (int i = 0; i < poseWorld.size(); i++) {
                 stateWorld.push_back(poseWorld[i]);
@@ -56,11 +54,11 @@ class PandaGoal : public ompl::base::GoalLazySamples
             for (int i = 0; i < velWorld.size(); i++) {
                 stateWorld.push_back(velWorld[i]);
             }
-            
-            printVec(confVec, "joint poses: ");
-            printVec(velVec, "joint vel: ");
-            printVec(stateWorld, "goal test: ");
-            printVec(goalPose_, "goal: ");
+            if (std::find(stateWorld.begin(), stateWorld.end(), std::numeric_limits<double>().infinity()) not_eq stateWorld.end()) {
+                return std::numeric_limits<double>().infinity();
+            }
+            printVec(stateWorld, "################### goal test: ");
+            printVec(goalPose_, "#################### goal: ");
             Eigen::Quaternionf stateQuat = Eigen::AngleAxisf(stateWorld[3], Eigen::Vector3f::UnitX())
                 * Eigen::AngleAxisf(stateWorld[4], Eigen::Vector3f::UnitY())
                 * Eigen::AngleAxisf(stateWorld[5], Eigen::Vector3f::UnitZ());
@@ -72,11 +70,14 @@ class PandaGoal : public ompl::base::GoalLazySamples
             
             std::cerr<<"setup stateWorld\n";
             double dist = 0;
-            for (int i = 0; i < goalPose_.size(); i++) {
+            for (int i = 0; i < 3; i++) {
                 dist += std::pow(goalPose_[i] - stateWorld[i], 2);
             }
             for (int i = 0; i < diffEuler.size(); i++) {
                 dist += std::pow(diffEuler[i], 2); 
+            }
+            for(int i = 0; i < velWorld.size(); i ++) {
+                dist += std::pow(velWorld[i], 2);
             }
             std::cerr<< " found dist: " << std::sqrt(dist) << std::endl;
 
@@ -103,7 +104,7 @@ class PandaGoal : public ompl::base::GoalLazySamples
             {
                 for (size_t i = 0; i < 10 && !good; ++i)
                 {
-                    printVec(goalPose);
+                    // printVec(goalPose);
                     std::vector<double> q = panda_->inverseKinematics(goalPose);
                     
                     if (q.empty()) {

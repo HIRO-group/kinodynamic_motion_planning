@@ -30,8 +30,38 @@ public:
         
         double *stateVals = state->as<PandaStateSpace::StateType>()->values;
         std::vector<double> q(stateVals, stateVals + PANDA_NUM_MOVABLE_JOINTS);
-
-        return not q.empty() and si_->satisfiesBounds(state) and not panda->inCollision(q);
+        // printVec(q, "is valid q: ");
+        if (q.empty()) {
+            return false;
+        } 
+        std::vector<double> velVec(stateVals + PANDA_NUM_JOINTS + 1, stateVals + 2 * PANDA_NUM_JOINTS - 1);
+        std::vector<double> poseWorld = panda->forwardKinematics(q);
+        std::vector<double> velWorld = panda->jointVelToEeVel(velVec, q);
+        std::vector<double> stateWorld;
+        for (int i = 0; i < poseWorld.size(); i++) {
+            stateWorld.push_back(poseWorld[i]);
+        }
+        for (int i = 0; i < velWorld.size(); i++) {
+            stateWorld.push_back(velWorld[i]);
+        }
+        // printVec(stateWorld, "stateWorld: ");
+        if (std::find(stateWorld.begin(), stateWorld.end(), std::numeric_limits<double>().infinity()) not_eq stateWorld.end()) {
+            return false;
+        }
+        if (std::fabs(stateWorld[1]) > 0.8 or std::fabs(stateWorld[2]) > 0.8 or 
+            std::isnan(std::fabs(stateWorld[1])) or std::isnan(std::fabs(stateWorld[2]))) {
+            return false;
+        }
+        if (stateWorld[2] > 1.19 or stateWorld[2] < -0.360 or 
+            std::isnan(std::fabs(stateWorld[2]))) {
+            return false;
+        }
+        for (int i = 0; i < 6; i++) {
+            if(std::fabs(stateWorld[i + 6]) > 0.8 or std::isnan(std::fabs(stateWorld[i + 6]))) {
+                return false;
+            }
+        }
+        return si_->satisfiesBounds(state) and not panda->inCollision(q);
     }
     std::shared_ptr<RobotInterface> panda;
     const ompl::base::SpaceInformationPtr si_;
