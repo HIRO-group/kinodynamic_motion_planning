@@ -90,3 +90,54 @@ void PandaStatePropogator::propagate(const ompl::base::State *start, const ompl:
         q_next[i] = sol[i+1];
     }
 }
+
+void PandaStatePropogator::propagate(const ompl::base::State *start, const ompl::control::Control* control,
+                const double duration, ompl::base::State *result, LSODA lsoda_temp) const
+{
+    double *t = control->as<PandaControlSpace::ControlType>()->values;
+    double *x = start->as<PandaStateSpace::StateType>()->values;
+    double *q_next = result->as<PandaStateSpace::StateType>()->values;
+    std::vector<double> eeVel(t, t + 6), state(x, x + 2 * PANDA_NUM_JOINTS);
+    std::vector<double> q(x, x+PANDA_NUM_JOINTS);
+    std::vector<double> dq = panda_->eeVelToJointVel(eeVel, q);
+    std::vector<double> ee_acc(PANDA_NUM_MOVABLE_JOINTS, 0.0);
+    std::vector<double> ddq(panda_->ddqFromEEAcc(ee_acc, dq, q));
+    std::vector<std::vector<double>> boundsA = PANDA_ACC_LIMS;
+    for (int i = 0; i < PANDA_NUM_MOVABLE_JOINTS; i++) {
+        if (boundsA[i][0] > ddq[i] or boundsA[i][1] < ddq[i]) {
+            double inf = std::numeric_limits<double>::infinity();
+            for (int j = 0; j < 2 * PANDA_NUM_JOINTS; j++) {
+                q_next[j] = inf;
+            }
+            // std::cout<<" ACC out of bounds!\n";
+            return;
+        }
+    }
+    std::vector<double> tau = get_tau(q, dq, ddq);
+    auto boundsT = PANDA_TORQUE_LIMS;
+    for (int i = 0; i < PANDA_NUM_MOVABLE_JOINTS; i++) {
+        if (boundsT[i][0] > tau[i] or boundsT[i][1] < tau[i]) {
+            double inf = std::numeric_limits<double>::infinity();
+            for (int j = 0; j < 2 * PANDA_NUM_JOINTS; j++) {
+                q_next[j] = inf;
+            }
+            std::cout<<"TAU out of bounds!\n";
+            return;
+        }
+    }
+    // simulate control
+    double rtol = 10E-12;
+    odeData data;
+    for (auto &t : tau) {
+        data.tau.push_back(t);
+    }
+    double s_time = 0.0;
+    std::vector<double> sol;
+    int isState = 1;
+    std::stringstream ss;
+    lsoda_temp.lsoda_update(PandaOde, PANDA_NUM_JOINTS * 2, state, sol, &lsoda_temp.prev_time_, duration, &isState, (void *)&data, rtol);
+    isState = 2;
+    for(int i = 0; i < PANDA_NUM_JOINTS * 2; i++) {
+        q_next[i] = sol[i+1];
+    }
+}

@@ -28,7 +28,7 @@ class PandaGoal : public ompl::base::GoalLazySamples
             si, [this](const ompl::base::GoalLazySamples *, ompl::base::State *st) { return sampleGoalThread(st); },
             true), stateSampler_(si->allocStateSampler()), goalPose_(goalState), panda_(rbt), pubGoal_(goalState)
         {
-            // threshold_ = 0.00001;
+            threshold_ = 0.01;
             goalQuat_ = Eigen::AngleAxisf(goalState[3], Eigen::Vector3f::UnitX())
                 * Eigen::AngleAxisf(goalState[4], Eigen::Vector3f::UnitY())
                 * Eigen::AngleAxisf(goalState[5], Eigen::Vector3f::UnitZ());

@@ -21,10 +21,12 @@ class PandaStatePropogator : public ompl::control::StatePropagator
                 const double duration, ompl::base::State *result) const;
         virtual void propagate(const ompl::base::State *start, const ompl::control::Control* control,
                 const double duration, ompl::base::State *result) const;
+        void propagate(const ompl::base::State *start, const ompl::control::Control* control,
+                const double duration, ompl::base::State *result, LSODA lsoda_temp) const;
     private:
-        LSODA lsoda;
         std::shared_ptr<RobotInterface> panda_;
         int mIsState = 1;
+        
 };
 
 

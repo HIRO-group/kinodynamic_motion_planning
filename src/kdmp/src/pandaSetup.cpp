@@ -64,11 +64,8 @@ public:
                 return false;
             }
         }
-        auto start = chrono::high_resolution_clock::now();
         bool isInCollision = panda->inCollision(q);
-        auto stop = chrono::high_resolution_clock::now();
-        auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
-        std::cout << "In collision took this many ms: "<< duration.count() << endl;
+        
         return si_->satisfiesBounds(state) and not isInCollision;
     }
     std::shared_ptr<RobotInterface> panda;
@@ -77,9 +74,10 @@ public:
 /// @endcond
 
 ompl::control::DirectedControlSamplerPtr PandaDirectedControlSamplerAllocator(
-    const omplControl::SpaceInformation *si, const omplBase::GoalPtr &goal, bool propogateMax)
+    const omplControl::SpaceInformation *si, const omplBase::GoalPtr &goal, std::shared_ptr<RobotInterface> rbt)
 {
-    return std::make_shared<ompl::control::SimpleDirectedControlSampler>(si, 10);
+    // return std::make_shared<ompl::control::SimpleDirectedControlSampler>(si, 10);
+    return std::make_shared<PandaDirectedControlSampler>(si, goal, rbt);
 }
 
 PandaSetup::PandaSetup(const char* plannerName, std::shared_ptr<RobotInterface> robot, std::vector<double> &stateVec)
@@ -120,13 +118,13 @@ PandaSetup::PandaSetup(const char* plannerName, std::shared_ptr<RobotInterface> 
     std::cout<<"set goal\n";
     double stepSize = 1.0 / PANDA_CTL_RATE; 
     si_->setPropagationStepSize(stepSize);
-    si_->setMinMaxControlDuration(1, MAX_NUM_STEPS);
+    si_->setMinMaxControlDuration(100, MAX_NUM_STEPS);
     
     const omplBase::GoalPtr& goal = getGoal();
     si_->setDirectedControlSamplerAllocator(
-        [&goal](const omplControl::SpaceInformation *si)
+        [&goal, robot](const omplControl::SpaceInformation *si)
         {
-            return PandaDirectedControlSamplerAllocator(si, goal, false);
+            return PandaDirectedControlSamplerAllocator(si, goal, robot);
         });
 
     setPlanner(getConfiguredPlannerInstance(plannerName));
