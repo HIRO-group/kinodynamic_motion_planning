@@ -10,8 +10,12 @@
 
 static std::vector<double> acc_from_torque(const std::vector<double> &state, const std::vector<double> &torque)
 {
-   auto q = Eigen::vecToEigenVec(std::vector<double>(&state[0], &state[PANDA_NUM_MOVABLE_JOINTS-1]));
-   auto qd = Eigen::vecToEigenVec(std::vector<double>(&state[PANDA_NUM_MOVABLE_JOINTS], &state[2 * PANDA_NUM_MOVABLE_JOINTS -1]));
+   auto q = Eigen::vecToEigenVec(std::vector<double>(state.begin(), state.begin() + PANDA_NUM_JOINTS));
+   auto qd = Eigen::vecToEigenVec(std::vector<double>(state.begin() + PANDA_NUM_JOINTS, state.end()));
+
+   // printVec(Eigen::eigenVecTovVec( q),  "$$$$$TOURQUE Q: ");
+   // printVec(Eigen::eigenVecTovVec( qd), "$$$$$TOURQUE V: ");
+
    auto t = Eigen::vecToEigenVec(torque);
 
    Eigen::Matrix7d M = MassMatrix(q);
@@ -21,7 +25,7 @@ static std::vector<double> acc_from_torque(const std::vector<double> &state, con
 
    Eigen::Vector7d acc = M.colPivHouseholderQr().solve((t - (C * qd) - g - f));
    
-   return std::vector<double>(acc.data(), acc.data()+acc.size());
+   return Eigen::eigenVecTovVec(acc);
 }
 
 static Eigen::MatrixXd get_jacobian_derivative(const Eigen::MatrixXd &J, const std::vector<double> &dqVec)
@@ -52,7 +56,7 @@ static std::vector<double> get_tau(std::vector<double> q, std::vector<double> dq
    auto g = GravityVector(qE);
    auto f = Friction(qd);
 
-   auto tau = M * qdd + C *qd + g + f;
+   auto tau = M * qdd + C * qd + g + f;
    return Eigen::eigenVecTovVec(tau);
 }
 
@@ -69,17 +73,11 @@ static void PandaOde(double t, double* y, double* ydot, void* data)
    
    std::vector<double> dq(y + PANDA_NUM_JOINTS, y + 2 * PANDA_NUM_JOINTS);
    std::vector<double> ddq = acc_from_torque(state, panda_data->tau);
-
-   // printVec(ddq, "####ddq: ");
    for (int i = 0; i < PANDA_NUM_MOVABLE_JOINTS; i++)
    {
       ydot[i] = dq[i];
       ydot[i+PANDA_NUM_JOINTS] = ddq[i];
    }
-   ydot[PANDA_NUM_JOINTS - 1] = 0.0;
-   ydot[2*PANDA_NUM_MOVABLE_JOINTS - 1] = 0.0;
-   // ydot[PANDA_NUM_MOVABLE_JOINTS] = 0.0;
-   // ydot[2 * PANDA_NUM_JOINTS -1] = 0.0;
 }
 
 

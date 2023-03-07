@@ -9,7 +9,7 @@
 static inline void printVec(std::vector<double> vec, std::string label = "")
 {
     std::stringstream ss;
-    ss << label;
+    ss << "\n" << label;
     ss<<"[ ";
     for (const auto &d : vec) {
         ss << " ";

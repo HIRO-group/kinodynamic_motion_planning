@@ -59,40 +59,26 @@ bool PandaMoveitInterface::inCollision(std::vector<double> q)
 
 std::vector<double> PandaMoveitInterface::inverseKinematics(std::vector<double> eePose)
 {
-    moveit_msgs::GetPositionIK::Request service_request;
-    moveit_msgs::GetPositionIK::Response service_response;
 
     Eigen::Quaternionf quat = Eigen::AngleAxisf(eePose[3], Eigen::Vector3f::UnitX())
     * Eigen::AngleAxisf(eePose[4], Eigen::Vector3f::UnitY())
     * Eigen::AngleAxisf(eePose[5], Eigen::Vector3f::UnitZ());
-    
 
-    service_request.ik_request.group_name = "panda_arm";
-    service_request.ik_request.pose_stamped.header.frame_id = "panda_link0";
-    service_request.ik_request.pose_stamped.pose.position.x = eePose[0];
-    service_request.ik_request.pose_stamped.pose.position.y = eePose[1];
-    service_request.ik_request.pose_stamped.pose.position.z = eePose[2];
+    geometry_msgs::Pose pose;
+    pose.position.x = eePose[0];
+    pose.position.y = eePose[1];
+    pose.position.z = eePose[2];
+    pose.orientation.x =  quat.x();
+    pose.orientation.y =  quat.y();
+    pose.orientation.z =  quat.z();
+    pose.orientation.w =  quat.w();
 
-    service_request.ik_request.pose_stamped.pose.orientation.x = quat.x();
-    service_request.ik_request.pose_stamped.pose.orientation.y = quat.y();
-    service_request.ik_request.pose_stamped.pose.orientation.z = quat.z();
-    service_request.ik_request.pose_stamped.pose.orientation.w = quat.w();
-    service_request.ik_request.robot_state.joint_state = currentState_.state.joint_state;
 
-    kinematic_state_->setToRandomPositions(joint_model_group_, rng_);
-    kinematic_state_->copyJointGroupPositions(joint_model_group_, 
-            service_request.ik_request.robot_state.joint_state.position);
+    kinematic_state_->setFromIK(joint_model_group_, pose, "panda_link8");
 
-    service_request.ik_request.avoid_collisions = true;
-    ik_service_client_.call(service_request, service_response);
-
-    ROS_INFO_STREAM(
-      "Result: " << ((service_response.error_code.val == service_response.error_code.SUCCESS) ? "True " : "False ")
-                 << service_response.error_code.val);
-    if (not (service_response.error_code.val == service_response.error_code.SUCCESS)) {
-        return std::vector<double>();
-    }
-    return service_response.solution.joint_state.position;
+    Eigen::VectorXd jointPositions;
+    kinematic_state_->copyJointGroupPositions(joint_model_group_, jointPositions);
+    return Eigen::eigenVecTovVec(jointPositions);
 }
 
 void PandaMoveitInterface::setRobotState(std::vector<double> state)
@@ -127,54 +113,34 @@ std::vector<double> PandaMoveitInterface::forwardKinematics(std::vector<double> 
     auto trans =  end_effector_state.translation();
     auto rot = end_effector_state.rotation().eulerAngles(0, 1, 2);
     return std::vector<double>({trans.x(), trans.y(), trans.z(), rot.x(), rot.y(), rot.z()});
-    // moveit_msgs::GetPositionFK::Request service_request;
-    // moveit_msgs::GetPositionFK::Response service_response;
-    // std::cout<<"in forward kinematics\n";
-    // service_request.fk_link_names = joint_model_group_->getLinkModelNames();
-    // service_request.robot_state.joint_state.position = q;
-    // service_request.header.frame_id = "panda_link0";
-    // std::cout<<"calling fk \n";
-    // fk_service_client_.call(service_request, service_response);
-    // std::cout<<"called fk \n";
-    // geometry_msgs::PoseStamped pose = *(service_response.pose_stamped.end() - 1);
-    // std::cout<<"Pose stamped \n";
-    // Eigen::Quaterniond quat = {pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z, pose.pose.orientation.w};
-
-    // auto euler = quat.toRotationMatrix().eulerAngles(0, 1, 2);
-
-
-    // return std::vector<double>({pose.pose.position.x, pose.pose.position.y, pose.pose.position.z,
-    //         euler.x(), euler.y(), euler.z()});
-    
 }
 
 std::vector<double> PandaMoveitInterface::eeVelToJointVel(std::vector<double> eeVel, std::vector<double> q)
 {
     kinematic_state_->setJointGroupPositions(joint_model_group_, q);
     Eigen::Vector3d reference_point_position(0.0, 0.0, 0.0);
-    Eigen::MatrixXd J;
+    Eigen::Matrix<double, 6, 7> J = getJacobian(q).block<6,7>(0,0);
     Eigen::Matrix<double, 6, 1> v;
-    kinematic_state_->getJacobian(joint_model_group_,
-                             kinematic_state_->getLinkModel(joint_model_group_->getLinkModelNames().back()),
-                             reference_point_position, J);
     for (int i = 0; i < 6; i++) {
         v[i] = eeVel[i];
     }
+    Eigen::Matrix<double, 7, 6> J_inv = J.transpose();
 
-    Eigen::Vector7d qd = J.inverse() * v;
+    // Eigen::HouseholderQR<Eigen::MatrixXd> qr(J.transpose());
+    // J_inv.setIdentity(7, 6);
+    // J_inv = qr.householderQ() * J_inv;  
+    // J_inv = qr.matrixQR().topLeftCorner(7, 6).triangularView<Eigen::Upper>().transpose().solve<Eigen::OnTheRight>(J_inv);
+
+    Eigen::Vector7d qd = J_inv * v;
 
     return std::vector<double>(qd.data(), qd.data() + qd.size());
-    
 }
 
 std::vector<double> PandaMoveitInterface::jointVelToEeVel(std::vector<double> qd, std::vector<double> q)
 {
     kinematic_state_->setJointGroupPositions(joint_model_group_, q);
     Eigen::Vector3d reference_point_position(0.0, 0.0, 0.0);
-    Eigen::MatrixXd J;
-    kinematic_state_->getJacobian(joint_model_group_,
-                             kinematic_state_->getLinkModel(joint_model_group_->getLinkModelNames().back()),
-                             reference_point_position, J);
+    Eigen::Matrix<double, 6, 7> J = getJacobian(q).block<6,7>(0,0);
     Eigen::Vector7d v;
     for (int i = 0; i < PANDA_NUM_MOVABLE_JOINTS; i++) {
         v[i] = qd[i];
@@ -189,6 +155,12 @@ std::vector<double> PandaMoveitInterface::jointVelToEeVel(std::vector<double> qd
  {
     kinematic_state_->setJointGroupPositions(joint_model_group_, q);
     Eigen::Vector3d reference_point_position(0.0, 0.0, 0.0);
+    // std::cout<<"\n\n";
+    // for (const std::string &name : joint_model_group_->getJointModelNames()) {
+    //     std::cout<<name<<std::endl;
+    // }
+    // std::cout<<"\n\n";
+
     Eigen::MatrixXd J;
     kinematic_state_->getJacobian(joint_model_group_,
                              kinematic_state_->getLinkModel(joint_model_group_->getLinkModelNames().back()),
@@ -202,6 +174,14 @@ std::vector<double> PandaMoveitInterface::jointVelToEeVel(std::vector<double> qd
     Eigen::Matrix<double, 6, 7> Jdot = get_jacobian_derivative(J, dq);
     Eigen::Matrix<double, 6, 1> ee_aack = Eigen::vecToEigenVec(ee_acc);
     Eigen::Vector7d dqE = Eigen::vecToEigenVec(dq);
-    Eigen::Vector7d ddq = J.transpose() * (ee_aack - Jdot * dqE);
+    Eigen::Matrix<double, 7, 6> J_inv = J.transpose();
+
+    // this is supposed to be the pseudo inv
+    Eigen::HouseholderQR<Eigen::MatrixXd> qr(J.transpose());
+    // J_inv.setIdentity(7, 6);
+    // J_inv = qr.householderQ() * J_inv;  
+    // J_inv = qr.matrixQR().topLeftCorner(7, 6).triangularView<Eigen::Upper>().transpose().solve<Eigen::OnTheRight>(J_inv);
+
+    Eigen::Vector7d ddq = J_inv * (ee_aack - Jdot * dqE);
     return Eigen::eigenVecTovVec(ddq);
  }

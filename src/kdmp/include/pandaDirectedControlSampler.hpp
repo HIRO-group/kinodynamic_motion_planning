@@ -30,7 +30,7 @@ class PandaDirectedControlSampler : public ompl::control::DirectedControlSampler
     protected:
         unsigned int getBestControl(ompl::control::Control *control, const ompl::base::State *source,
                                                                          ompl::base::State *dest, const ompl::control::Control *previous);
-        unsigned int propagateWhileValid(ompl::control::Control *control, ompl::base::State *source, ompl::base::State *dest, int steps);
+        unsigned int propagateWhileValid(ompl::control::Control *control, const ompl::base::State *source, ompl::base::State *dest, int steps);
         double distance(const ompl::base::State *state1, const ompl::base::State *state2) const;
         ompl::control::RealVectorControlUniformSampler                     cs_;
         ompl::RNG                                rng_;

@@ -48,7 +48,7 @@ void PandaStatePropogator::propagate(const ompl::base::State *start, const ompl:
     std::vector<double> eeVel(t, t + 6), state(x, x + 2 * PANDA_NUM_JOINTS);
     std::vector<double> q(x, x+PANDA_NUM_JOINTS);
     std::vector<double> dq = panda_->eeVelToJointVel(eeVel, q);
-    std::vector<double> ee_acc(PANDA_NUM_MOVABLE_JOINTS, 0.0);
+    std::vector<double> ee_acc(6, 0.0);
     std::vector<double> ddq(panda_->ddqFromEEAcc(ee_acc, dq, q));
     std::vector<std::vector<double>> boundsA = PANDA_ACC_LIMS;
     for (int i = 0; i < PANDA_NUM_MOVABLE_JOINTS; i++) {
@@ -86,9 +86,11 @@ void PandaStatePropogator::propagate(const ompl::base::State *start, const ompl:
     std::stringstream ss;
     lsoda_temp.lsoda_update(PandaOde, PANDA_NUM_JOINTS * 2, state, sol, &s_time, duration, &isState, (void *)&data, rtol);
     isState = 2;
+    printVec(sol, "NEXT STATE: ");
     for(int i = 0; i < PANDA_NUM_JOINTS * 2; i++) {
         q_next[i] = sol[i+1];
     }
+
 }
 
 void PandaStatePropogator::propagate(const ompl::base::State *start, const ompl::control::Control* control,
@@ -97,10 +99,11 @@ void PandaStatePropogator::propagate(const ompl::base::State *start, const ompl:
     double *t = control->as<PandaControlSpace::ControlType>()->values;
     double *x = start->as<PandaStateSpace::StateType>()->values;
     double *q_next = result->as<PandaStateSpace::StateType>()->values;
+    
     std::vector<double> eeVel(t, t + 6), state(x, x + 2 * PANDA_NUM_JOINTS);
     std::vector<double> q(x, x+PANDA_NUM_JOINTS);
     std::vector<double> dq = panda_->eeVelToJointVel(eeVel, q);
-    std::vector<double> ee_acc(PANDA_NUM_MOVABLE_JOINTS, 0.0);
+    std::vector<double> ee_acc(6, 0.0);
     std::vector<double> ddq(panda_->ddqFromEEAcc(ee_acc, dq, q));
     std::vector<std::vector<double>> boundsA = PANDA_ACC_LIMS;
     for (int i = 0; i < PANDA_NUM_MOVABLE_JOINTS; i++) {
@@ -135,8 +138,11 @@ void PandaStatePropogator::propagate(const ompl::base::State *start, const ompl:
     std::vector<double> sol;
     int isState = 1;
     std::stringstream ss;
-    lsoda_temp.lsoda_update(PandaOde, PANDA_NUM_JOINTS * 2, state, sol, &lsoda_temp.prev_time_, duration, &isState, (void *)&data, rtol);
+    lsoda_temp.lsoda_update(PandaOde, PANDA_NUM_JOINTS * 2, state, sol, &s_time, duration, &isState, (void *)&data, rtol);
     isState = 2;
+    // printVec(std::vector<double>(sol.begin() + 1, sol.end()),   "######### sol: ");
+    // printVec(state, "####### start: ");
+    // printVec(tau, "######### tau: ");
     for(int i = 0; i < PANDA_NUM_JOINTS * 2; i++) {
         q_next[i] = sol[i+1];
     }

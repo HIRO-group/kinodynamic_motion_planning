@@ -2,7 +2,8 @@
     <include file="$(find panda_moveit_config)/launch/demo.launch" />
 
 
-    <node name="omplRRT_node" pkg="kdmp_ros" type="omplRRT" output="screen"/>
+    <node name="omplRRT_node" pkg="kdmp_ros" type="omplRRT" output="screen"  launch-prefix="gdb -ex run --args"/>
+    <node pkg="rosservice" type="rosservice" name="set_move_base_log_level" args="call --wait /omplRRT_node 'info'" />  
 
 
 </launch>

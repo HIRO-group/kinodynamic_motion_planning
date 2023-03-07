@@ -31,7 +31,7 @@ namespace Eigen {
 	{
 		
 		int len = std::min((int)vec.size(), 7);
-		VectorXd v(len, 1);
+		VectorXd v(len);
 		for (int i = 0; i < len; i++) {
 			v[i] = vec[i];
 		}

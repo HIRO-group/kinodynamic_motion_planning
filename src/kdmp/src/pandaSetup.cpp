@@ -30,43 +30,20 @@ public:
 
     bool isValid(const omplBase::State *state) const override
     {
+        double *s = state->as<PandaStateSpace::StateType>()->values;
+        std::vector<double> q(s, s + PANDA_NUM_MOVABLE_JOINTS);
+        if ( not si_->satisfiesBounds(state)) {
+            return false;
+        }
         
-        double *stateVals = state->as<PandaStateSpace::StateType>()->values;
-        std::vector<double> q(stateVals, stateVals + PANDA_NUM_MOVABLE_JOINTS);
         // printVec(q, "is valid q: ");
         if (q.empty()) {
+            std::cout<<"\n EMPTY STATE \n";
             return false;
         } 
-        std::vector<double> velVec(stateVals + PANDA_NUM_JOINTS + 1, stateVals + 2 * PANDA_NUM_JOINTS - 1);
-        std::vector<double> poseWorld = panda->forwardKinematics(q);
-        std::vector<double> velWorld = panda->jointVelToEeVel(velVec, q);
-        std::vector<double> stateWorld;
-        for (int i = 0; i < poseWorld.size(); i++) {
-            stateWorld.push_back(poseWorld[i]);
-        }
-        for (int i = 0; i < velWorld.size(); i++) {
-            stateWorld.push_back(velWorld[i]);
-        }
-        // printVec(stateWorld, "stateWorld: ");
-        if (std::find(stateWorld.begin(), stateWorld.end(), std::numeric_limits<double>().infinity()) not_eq stateWorld.end()) {
-            return false;
-        }
-        if (std::fabs(stateWorld[1]) > 0.8 or std::fabs(stateWorld[2]) > 0.8 or 
-            std::isnan(std::fabs(stateWorld[1])) or std::isnan(std::fabs(stateWorld[2]))) {
-            return false;
-        }
-        if (stateWorld[2] > 1.19 or stateWorld[2] < -0.360 or 
-            std::isnan(std::fabs(stateWorld[2]))) {
-            return false;
-        }
-        for (int i = 0; i < 6; i++) {
-            if(std::fabs(stateWorld[i + 6]) > 0.8 or std::isnan(std::fabs(stateWorld[i + 6]))) {
-                return false;
-            }
-        }
         bool isInCollision = panda->inCollision(q);
-        
-        return si_->satisfiesBounds(state) and not isInCollision;
+
+        return not isInCollision;
     }
     std::shared_ptr<RobotInterface> panda;
     const ompl::base::SpaceInformationPtr si_;
@@ -96,6 +73,7 @@ PandaSetup::PandaSetup(const char* plannerName, std::shared_ptr<RobotInterface> 
     } else {
         std::cout<<"startvec setting\n";
         std::vector<double> startVec = panda_->getRandomConfig();
+
         std::cout<<"startvec size: "<< startVec.size() << std::endl;
         for(int i = 0; i < PANDA_NUM_JOINTS; i++) {
             startVec.push_back(0.0);
@@ -103,10 +81,33 @@ PandaSetup::PandaSetup(const char* plannerName, std::shared_ptr<RobotInterface> 
         std::cout<<"startvec set\n";
         space->copyFromReals(start.get(), startVec);
         std::cout<<"startvec copied to start state\n";
+        while (not si_->isValid(start->as<PandaStateSpace::StateType>()))
+        {
+            startVec = panda_->getRandomConfig();
+            for(int i = 0; i < PANDA_NUM_JOINTS; i++) {
+                startVec.push_back(0.0);
+            }
+            space->copyFromReals(start.get(), startVec);
+        }
+    }
+    omplBase::ScopedState<> goal_test(space);
+    std::vector<double> goalVecTest = panda_->getRandomConfig();
+    
+    
+    for (int i = 0; i < PANDA_NUM_JOINTS; i++) {
+        goalVecTest.push_back(0.0);
+    }
+    space->copyFromReals(goal_test.get(), goalVecTest);
+    while (not si_->isValid(goal_test->as<PandaStateSpace::StateType>()))
+    {
+        goalVecTest = panda_->getRandomConfig();
+        for(int i = 0; i < PANDA_NUM_JOINTS; i++) {
+            goalVecTest.push_back(0.0);
+        }
+        space->copyFromReals(goal_test.get(), goalVecTest);
     }
     
-    std::vector<double> goalVec = panda_->forwardKinematics(panda_->getRandomConfig());
-    printVec(goalVec, "goalVec: ");
+    std::vector<double> goalVec = panda_->forwardKinematics(goalVecTest);
     for (int i = 0; i < 6; i++) {
         goalVec.push_back(0.0);
     }
@@ -118,7 +119,7 @@ PandaSetup::PandaSetup(const char* plannerName, std::shared_ptr<RobotInterface> 
     std::cout<<"set goal\n";
     double stepSize = 1.0 / PANDA_CTL_RATE; 
     si_->setPropagationStepSize(stepSize);
-    si_->setMinMaxControlDuration(100, MAX_NUM_STEPS);
+    si_->setMinMaxControlDuration(1, MAX_NUM_STEPS);
     
     const omplBase::GoalPtr& goal = getGoal();
     si_->setDirectedControlSamplerAllocator(
