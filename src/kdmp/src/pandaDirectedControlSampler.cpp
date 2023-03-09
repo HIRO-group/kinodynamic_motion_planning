@@ -74,7 +74,7 @@ unsigned int PandaDirectedControlSampler::propagateWhileValid(ompl::control::Con
 
         // free the temporary memory
         si_->freeState(toDelete);
-        // std::cout<< "########## r itterations: " << r <<std::endl;
+        std::cout<< "########## r itterations: " << r <<std::endl;
         return r;
     }
     // if the first propagation step produced an invalid step, return 0 steps

@@ -26,12 +26,22 @@ class PandaGoal : public ompl::base::GoalLazySamples
         PandaGoal(const ompl::base::SpaceInformationPtr &si, std::shared_ptr<RobotInterface> rbt, const std::vector<double> &goalState, double threshold=0.01)
             : ompl::base::GoalLazySamples(
             si, [this](const ompl::base::GoalLazySamples *, ompl::base::State *st) { return sampleGoalThread(st); },
-            true), stateSampler_(si->allocStateSampler()), goalPose_(goalState), panda_(rbt), pubGoal_(goalState)
+            true), stateSampler_(si->allocStateSampler()), goalPose_(goalState), panda_(rbt), pubGoal_(goalState),
+            goalQuat_(Eigen::AngleAxisf(goalState[3], Eigen::Vector3f::UnitX())
+                * Eigen::AngleAxisf(goalState[4], Eigen::Vector3f::UnitY())
+                * Eigen::AngleAxisf(goalState[5], Eigen::Vector3f::UnitZ()))
         {
             threshold_ = 0.01;
-            goalQuat_ = Eigen::AngleAxisf(goalState[3], Eigen::Vector3f::UnitX())
-                * Eigen::AngleAxisf(goalState[4], Eigen::Vector3f::UnitY())
-                * Eigen::AngleAxisf(goalState[5], Eigen::Vector3f::UnitZ());
+        }
+
+        double distEuclid(double *st, double *goal, int rng) const
+        {
+            double dist = 0;
+            for (int i = 0; i < rng; i++) {
+                double diff = goal[i] - st[i];
+                dist += diff * diff;
+            }
+            return sqrt(dist);
         }
 
         /**
@@ -39,34 +49,30 @@ class PandaGoal : public ompl::base::GoalLazySamples
          * 
          * @param[in] st - state whose distance from goal is being checked
         */
-        // virtual double distanceGoal(const ompl::base::State *st) const
-        // {
-        //     const double *state = st->as<PandaStateSpace::StateType>()->values;
-        //     std::vector<double> confVec(state, state + PANDA_NUM_MOVABLE_JOINTS);
-        //     std::vector<double> velVec(state + PANDA_NUM_JOINTS + 1, state + 2 * PANDA_NUM_JOINTS - 1);
-        //     std::vector<double> poseWorld = panda_->forwardKinematics(confVec);
-        //     std::vector<double> velWorld = panda_->jointVelToEeVel(velVec, confVec);
-        //     std::vector<double> stateWorld;
-        //     printVec(stateWorld, "################### goal test: ");
-        //     printVec(goalPose_, "#################### goal: ");
-        //     Eigen::Quaternionf stateQuat = Eigen::AngleAxisf(stateWorld[3], Eigen::Vector3f::UnitX())
-        //         * Eigen::AngleAxisf(stateWorld[4], Eigen::Vector3f::UnitY())
-        //         * Eigen::AngleAxisf(stateWorld[5], Eigen::Vector3f::UnitZ());
-            
-        //     Eigen::Quaternionf diffQuat;
-        //     diffQuat = stateQuat * goalQuat_.inverse();
-
-        //     std::vector<double> diffEuler = Eigen::eigenVecTovVec(diffQuat.toRotationMatrix().eulerAngles(0, 1, 2));
-        //     for (auto &goal : GoalStates())
-        //     // std::cerr<<"setup stateWorld\n";
-        //     double dist = 0;
-        //     for (int i = 0; i < PANDA_NUM_JOINTS; i++) {
-        //         dist += std::pow(goalPose_[i] - stateWorld[i], 2);
-        //     }
-        //     // std::cerr<< " found dist: " << std::sqrt(dist) << std::endl;
-
-        //     return std::sqrt(dist);
-        // }
+        virtual double distanceGoal(const ompl::base::State *st) const
+        {
+            double dist = std::numeric_limits<double>::infinity();
+            double *vals = st->as<PandaStateSpace::StateType>()->values;
+            double *match = nullptr;
+            for (auto state : states_)
+            {
+                double *goal = state->as<PandaStateSpace::StateType>()->values;
+                double d = distEuclid(vals, goal, PANDA_NUM_JOINTS * 2);
+                if (d < dist) {
+                    dist = d;
+                    match = goal;
+                }
+            }
+            if (match) {
+                printVec(std::vector<double>(match, match+PANDA_NUM_JOINTS), "MATCHED GOAL: ");
+                printVec(std::vector<double>(vals, vals+PANDA_NUM_JOINTS), "TEST STATE: ");
+                printVec(panda_->forwardKinematics(std::vector<double>(match, match+PANDA_NUM_JOINTS)), "MATCHED GOALEE: ");
+                printVec(panda_->forwardKinematics(std::vector<double>(vals, vals+PANDA_NUM_JOINTS)), "TEST STATE EE: ");
+                
+                
+            }
+            return dist;
+        }
 
 
         const std::vector<double> pubGoal_;
@@ -80,7 +86,7 @@ class PandaGoal : public ompl::base::GoalLazySamples
             std::vector<double> goalPose(goalPose_.begin(), goalPose_.begin() + 6);
             bool good = false;
             // std::cout << "goal Pose extracted";
-            unsigned int maxTries = 1000;
+            unsigned int maxTries = 10000;
             unsigned int tries = 0; 
 
             do
@@ -88,10 +94,10 @@ class PandaGoal : public ompl::base::GoalLazySamples
                 for (size_t i = 0; i < 10 && !good; ++i)
                 {
                     // printVec(goalPose);
-                        std::cout<<"\n$$$$$$$$$$$$ test0.1\n";
+                        // std::cout<<"\n$$$$$$$$$$$$ test0.1\n";
 
                     std::vector<double> q = panda_->inverseKinematics(goalPose);
-                    std::cout<<"\n$$$$$$$$$$$$ test0.2\n";
+                    // std::cout<<"\n$$$$$$$$$$$$ test0.2\n";
                     
                     if (q.empty()) {
                         continue;
@@ -107,15 +113,20 @@ class PandaGoal : public ompl::base::GoalLazySamples
                             q.push_back(0.0);
                         }
                         // copy values into state
-                        std::cout<<"\n$$$$$$$$$$$$ test1\n";
+                        // std::cout<<"\n$$$$$$$$$$$$ test1\n";
                         double *arr = q.data();
+                        // std::cout<<"starting state copy\n";
                         memcpy(st->as<PandaStateSpace::StateType>()->values, arr,
                             2 * PANDA_NUM_JOINTS * sizeof(double));
-                        std::cout<<"\n$$$$$$$$$$$$ test2\n";
+                        
+                        // std::cout<<"\n$$$$$$$$$$$$ test2\n";
                         
                         // GoalLazySamples will check validity
                         good = true;
                        printVec(q, "#### NEW GOAL: ");
+                       std::vector<double> subQ(q.begin(), q.begin() + 7);
+                       printVec(panda_->forwardKinematics(subQ), "NEW GOAL POSE: ");
+                       printVec(goalPose, "### GOAL Pose");
                     }
                     tries++;
                 }
@@ -126,9 +137,9 @@ class PandaGoal : public ompl::base::GoalLazySamples
     private:
         mutable ompl::RNG rng_;
         ompl::base::StateSamplerPtr stateSampler_;
-        std::vector<double> goalPose_;
+        const std::vector<double> goalPose_;
         std::shared_ptr<RobotInterface> panda_;
-        Eigen::Quaternionf goalQuat_;
+        const Eigen::Quaternionf goalQuat_;
 };
 
 #endif

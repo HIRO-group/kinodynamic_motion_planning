@@ -42,7 +42,9 @@ public:
             return false;
         } 
         bool isInCollision = panda->inCollision(q);
-
+        if (isInCollision) {
+            std::cout<<"\n############# IN COLLISION\n";
+        }
         return not isInCollision;
     }
     std::shared_ptr<RobotInterface> panda;

@@ -1,9 +1,12 @@
 #include "kdmp_ros/pandaMoveitInterface.hpp"
+#include "kdmp_ros/panda_ik.hpp"
 #include "franka_model.h"
 #include "pandaConstants.hpp"
 #include "rigidBodyDynamics.hpp"
 #include "Eigen/Core"
 #include "Eigen/LU"
+#include <array>
+#include <algorithm>
 #include "moveit_msgs/ApplyPlanningScene.h"
 
 PandaMoveitInterface::PandaMoveitInterface(ros::NodeHandle nh) 
@@ -63,7 +66,13 @@ std::vector<double> PandaMoveitInterface::inverseKinematics(std::vector<double> 
     Eigen::Quaternionf quat = Eigen::AngleAxisf(eePose[3], Eigen::Vector3f::UnitX())
     * Eigen::AngleAxisf(eePose[4], Eigen::Vector3f::UnitY())
     * Eigen::AngleAxisf(eePose[5], Eigen::Vector3f::UnitZ());
+    
+    // quat to rotation matrix
+    Eigen::Matrix3f R = quat.normalized().toRotationMatrix();
 
+    float *Rf = R.data();
+
+    
     geometry_msgs::Pose pose;
     pose.position.x = eePose[0];
     pose.position.y = eePose[1];
@@ -73,11 +82,11 @@ std::vector<double> PandaMoveitInterface::inverseKinematics(std::vector<double> 
     pose.orientation.z =  quat.z();
     pose.orientation.w =  quat.w();
 
-
+    kinematic_state_->setToRandomPositions();
     kinematic_state_->setFromIK(joint_model_group_, pose, "panda_link8");
-
     Eigen::VectorXd jointPositions;
     kinematic_state_->copyJointGroupPositions(joint_model_group_, jointPositions);
+
     return Eigen::eigenVecTovVec(jointPositions);
 }
 
