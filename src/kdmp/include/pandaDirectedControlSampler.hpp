@@ -38,7 +38,7 @@ class PandaDirectedControlSampler : public ompl::control::DirectedControlSampler
         const PandaStatePropogator *statePropagator_;
         bool                                     propogateMax_;
         std::shared_ptr<RobotInterface> panda_;
-        LSODA lsoda_;
+        const LSODA lsoda_;
         int numControlSamples_;
 };
 

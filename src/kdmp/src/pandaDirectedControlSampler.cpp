@@ -28,7 +28,6 @@ namespace omplControl = ompl::control;
     unsigned int steps = cs_.sampleStepCount(minDuration, maxDuration);
     // Propagate the first control, and find how far it is from the target state
     ompl::base::State *bestState = si_->allocState();
-    lsoda_.prev_time_ = 0.0;
     steps = propagateWhileValid(control, source, bestState, steps);
     si_->copyState(dest, bestState);
     si_->freeState(bestState);
@@ -74,7 +73,7 @@ unsigned int PandaDirectedControlSampler::propagateWhileValid(ompl::control::Con
 
         // free the temporary memory
         si_->freeState(toDelete);
-        std::cout<< "########## r itterations: " << r <<std::endl;
+        // std::cout<< "########## r itterations: " << r <<std::endl;
         return r;
     }
     // if the first propagation step produced an invalid step, return 0 steps

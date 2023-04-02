@@ -140,7 +140,7 @@ void PandaStatePropogator::propagate(const ompl::base::State *start, const ompl:
     std::stringstream ss;
     lsoda_temp.lsoda_update(PandaOde, PANDA_NUM_JOINTS * 2, state, sol, &s_time, duration, &isState, (void *)&data, rtol);
     isState = 2;
-    // printVec(std::vector<double>(sol.begin() + 1, sol.end()),   "######### sol: ");
+    printVec(std::vector<double>(sol.begin() + 1, sol.end()),   "######### sol: ");
     // printVec(state, "####### start: ");
     // printVec(tau, "######### tau: ");
     for(int i = 0; i < PANDA_NUM_JOINTS * 2; i++) {

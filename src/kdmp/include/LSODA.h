@@ -91,7 +91,6 @@ public:
     double vmnorm(const size_t n, const vector<double> &v, const vector<double> &w);
 
     static bool abs_compare(double a, double b);
-    double prev_time_ = 0.0;
 
 private:
     size_t ml, mu, imxer;

@@ -4,7 +4,7 @@
 #include <vector>
 
 
-#define PANDA_CTL_RATE 100
+#define PANDA_CTL_RATE 50
 #define PANDA_NUM_JOINTS 7
 #define PANDA_NUM_MOVABLE_JOINTS 7
 #define MAX_PLAN_TIME 180.0

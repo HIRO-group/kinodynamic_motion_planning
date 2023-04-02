@@ -115,7 +115,7 @@ int main(int argc, char **argv)
     ompl::control::SimpleSetupPtr setup = std::make_shared<PandaSetup>(plannerType.c_str(), robot_interface, startVec);
     // PandaSetupSimple setup = PandaSetupSimple(plannerType.c_str(), robot_interface, startVec);
 
-    SolveProblem(setup, 120, false, robot_interface);
+    SolveProblem(setup, 10, false, robot_interface);
     ros::shutdown();
     return 0;
 }

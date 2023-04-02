@@ -1,0 +1,10 @@
+<launch>
+    <include file="$(find panda_moveit_config)/launch/demo.launch" />
+
+    <node name="cmd_sample_node" pkg="kdmp_ros" type="panda_edge_data_node.py"/>
+
+    <node name="test_propogate_fn_node" pkg="kdmp_ros" type="test_propogate_fn" output="screen"/>
+    <node pkg="rosservice" type="rosservice" name="set_move_base_log_level" args="call --wait /omplRRT_node 'info'" />
+
+
+</launch>
