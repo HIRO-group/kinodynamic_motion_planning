@@ -21,36 +21,33 @@ namespace omplBase = ompl::base;
 class PandaControlSampler : public omplControl::ControlSampler
 {
   public:
-    PandaControlSampler(const omplControl::ControlSpace *space, PandaControlType controlType = TORQUE_CTL) : 
-        omplControl::ControlSampler(space), mControlType(controlType)
+    PandaControlSampler(const omplControl::ControlSpace *space) : 
+        omplControl::ControlSampler(space)
     {
     }
 
     virtual void sample(ompl::control::Control *control);
     
     
-    virtual void sample(ompl::control::Control *control, const ompl::base::State *state);
-    virtual void sampleNext(ompl::control::Control *control, const ompl::control::Control * /* previous */,
-        const ompl::base::State *state)
-    {
-        sample(control, state);
-    }
+    // virtual void sample(ompl::control::Control *control, const ompl::base::State *state);
+    // virtual void sampleNext(ompl::control::Control *control, const ompl::control::Control * /* previous */,
+    //     const ompl::base::State *state)
+    // {
+    //     sample(control, state);
+    // }
 
-    virtual void steer(ompl::control::Control *control, const ompl::base::State *state, std::vector<double> x);
-
-  protected:
-    PandaControlType mControlType;
+    // virtual void steer(ompl::control::Control *control, const ompl::base::State *state, std::vector<double> x);
 };
 
 
 class PandaControlSpace : public omplControl::RealVectorControlSpace
 {
   public:
-    PandaControlSpace(PandaControlType controlType = TORQUE_CTL, int numDims = PANDA_NUM_MOVABLE_JOINTS);
+    PandaControlSpace(PandaControlType controlType = TORQUE_CTL, int numDims = 6);
 
     virtual ompl::control::ControlSamplerPtr allocDefaultControlSampler() const
     {
-        return std::make_shared<PandaControlSampler>(this, mControlType);
+        return std::make_shared<PandaControlSampler>(this);
     }
 
   protected:

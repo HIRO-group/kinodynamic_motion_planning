@@ -14,6 +14,7 @@
 #include <Eigen/Core>
 #include <vector>
 
+
 #ifndef INCLUDE_FRANKA_MODEL_H_
 #define INCLUDE_FRANKA_MODEL_H_
 
@@ -26,14 +27,25 @@ namespace Eigen {
 	typedef Eigen::Matrix< double , NUMBER_OF_JOINTS , NUMBER_OF_JOINTS > Matrix7d;
 	typedef Eigen::Matrix< double , NUMBER_OF_JOINTS , 1 > Vector7d;
 
-	static inline Vector7d vecToEigenVec(std::vector<double> vec) 
+	static inline VectorXd vecToEigenVec(std::vector<double> vec) 
 	{
-		Vector7d v;
+		
 		int len = std::min((int)vec.size(), 7);
+		VectorXd v(len);
 		for (int i = 0; i < len; i++) {
 			v[i] = vec[i];
 		}
 		return v;
+	}
+
+	template<typename T>
+	static inline std::vector<double> eigenVecTovVec(T eigenVec)
+	{
+		std::vector<double> vec;
+		for (int i = 0; i<eigenVec.size(); i++) {
+			vec.push_back(eigenVec[i]);
+		}
+		return vec;
 	}
 
 }

@@ -18,6 +18,8 @@ find_package(catkin REQUIRED COMPONENTS
     roscpp
     rospy
     std_msgs
+    geometry_msgs
+    message_generation
     moveit_core
     moveit_msgs
     moveit_ros_planning
@@ -37,6 +39,8 @@ find_package(catkin REQUIRED COMPONENTS
 )
 find_package(Eigen3 REQUIRED)
 
+
+
 set(CMAKE_MODULE_PATH
     "${CMAKE_MODULE_PATH}"
     "${CMAKE_ROOT_DIR}/cmake/Modules"
@@ -48,12 +52,26 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
 
 set(KDMP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/src;${CMAKE_CURRENT_BINARY_DIR}/src")
 
+add_message_files(
+  FILES
+  PandaControlCmd.msg
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+  geometry_msgs
+)
+
 include_directories(
     include
     ${CMAKE_INSTALL_INCLUDEDIR}
     ${catkin_INCLUDE_DIRS}
 )
 
+catkin_install_python(PROGRAMS nodes/panda_edge_data_node.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 add_subdirectory(src)
 
@@ -69,9 +87,16 @@ add_library(environments
     env/moveItEnv.cpp)  
 target_link_libraries(environments ${catkin_LIBRARIES} kdmp)
       
-catkin_package()
+catkin_package(
+  CATKIN_DEPENDS message_runtime
+)
 
 add_executable(omplRRT execs/omplRRT.cpp)
 target_link_libraries(omplRRT ${catkin_LIBRARIES} robot_interfaces kdmp environments)
 target_include_directories(omplRRT PUBLIC
                            "include/kdmp_ros/")
+
+add_executable(test_propogate_fn test/test_propogate.cpp)
+target_link_libraries(test_propogate_fn ${catkin_LIBRARIES} robot_interfaces kdmp environments)
+target_include_directories(test_propogate_fn PUBLIC
+                            "include/kdmp_ros/")

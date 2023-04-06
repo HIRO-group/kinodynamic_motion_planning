@@ -5,12 +5,17 @@
 #include <pandaControlSpace.hpp>
 #include <pandaStatePropogator.hpp>
 #include <pandaDirectedControlSampler.hpp>
+
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/control/planners/rrt/RRT.h>
 #include <ompl/control/planners/kpiece/KPIECE1.h>
 #include <ompl/control/planners/est/EST.h>
 #include <ompl/control/planners/sst/SST.h>
+#include <ompl/control/SimpleDirectedControlSampler.h>
+
 #include <iostream>
+#include <chrono>
+
 namespace omplBase = ompl::base;
 namespace omplControl = ompl::control;
 
@@ -25,10 +30,22 @@ public:
 
     bool isValid(const omplBase::State *state) const override
     {
+        double *s = state->as<PandaStateSpace::StateType>()->values;
+        std::vector<double> q(s, s + PANDA_NUM_MOVABLE_JOINTS);
+        if ( not si_->satisfiesBounds(state)) {
+            return false;
+        }
         
-        double *stateVals = state->as<PandaStateSpace::StateType>()->values;
-        std::vector<double> stateVec(stateVals, stateVals + si_->getStateDimension());
-        return si_->satisfiesBounds(state) and not panda->inCollision(stateVec);
+        // printVec(q, "is valid q: ");
+        if (q.empty()) {
+            std::cout<<"\n EMPTY STATE \n";
+            return false;
+        } 
+        bool isInCollision = panda->inCollision(q);
+        if (isInCollision) {
+            std::cout<<"\n############# IN COLLISION\n";
+        }
+        return not isInCollision;
     }
     std::shared_ptr<RobotInterface> panda;
     const ompl::base::SpaceInformationPtr si_;
@@ -36,9 +53,10 @@ public:
 /// @endcond
 
 ompl::control::DirectedControlSamplerPtr PandaDirectedControlSamplerAllocator(
-    const omplControl::SpaceInformation *si, const omplBase::GoalPtr &goal, bool propogateMax)
+    const omplControl::SpaceInformation *si, const omplBase::GoalPtr &goal, std::shared_ptr<RobotInterface> rbt)
 {
-    return std::make_shared<PandaDirectedControlSampler>(si, goal, propogateMax);
+    // return std::make_shared<ompl::control::SimpleDirectedControlSampler>(si, 10);
+    return std::make_shared<PandaDirectedControlSampler>(si, goal, rbt);
 }
 
 PandaSetup::PandaSetup(const char* plannerName, std::shared_ptr<RobotInterface> robot, std::vector<double> &stateVec)
@@ -48,41 +66,71 @@ PandaSetup::PandaSetup(const char* plannerName, std::shared_ptr<RobotInterface> 
     const omplBase::StateSpacePtr &space = getStateSpace();
     std::cerr<<"got space ptr\n";
     space->setup();
+    setStateValidityChecker(std::make_shared<PandaStateValidityChecker>(si_, panda_));
+    setStatePropagator(std::make_shared<PandaStatePropogator>(si_, panda_));
     std::cerr<<"setup space\n";
-    std::vector<double> goalVec(space->getDimension(), 0.0);
     omplBase::ScopedState<> start(space);
-    // auto goal = std::make_shared<omplBase::ScopedState<>>(space);
     if (stateVec.size() == space->getDimension()) {
         space->copyFromReals(start.get(), stateVec);
     } else {
+        std::cout<<"startvec setting\n";
         std::vector<double> startVec = panda_->getRandomConfig();
-        
+
+        std::cout<<"startvec size: "<< startVec.size() << std::endl;
+        for(int i = 0; i < PANDA_NUM_JOINTS; i++) {
+            startVec.push_back(0.0);
+        }
+        std::cout<<"startvec set\n";
         space->copyFromReals(start.get(), startVec);
+        std::cout<<"startvec copied to start state\n";
+        while (not si_->isValid(start->as<PandaStateSpace::StateType>()))
+        {
+            startVec = panda_->getRandomConfig();
+            for(int i = 0; i < PANDA_NUM_JOINTS; i++) {
+                startVec.push_back(0.0);
+            }
+            space->copyFromReals(start.get(), startVec);
+        }
+    }
+    omplBase::ScopedState<> goal_test(space);
+    std::vector<double> goalVecTest = panda_->getRandomConfig();
+    
+    
+    for (int i = 0; i < PANDA_NUM_JOINTS; i++) {
+        goalVecTest.push_back(0.0);
+    }
+    space->copyFromReals(goal_test.get(), goalVecTest);
+    while (not si_->isValid(goal_test->as<PandaStateSpace::StateType>()))
+    {
+        goalVecTest = panda_->getRandomConfig();
+        for(int i = 0; i < PANDA_NUM_JOINTS; i++) {
+            goalVecTest.push_back(0.0);
+        }
+        space->copyFromReals(goal_test.get(), goalVecTest);
     }
     
-    std::vector<double> q_goal = panda_->getRandomConfig();
-
-    for (int i = 0; i< q_goal.size(); i++) {
-        goalVec[i] = q_goal[i];
+    std::vector<double> goalVec = panda_->forwardKinematics(goalVecTest);
+    for (int i = 0; i < 6; i++) {
+        goalVec.push_back(0.0);
     }
-
+    std::cout<<"goal size: "<<goalVec.size()<<std::endl;
+    
     setStartState(start);
-    std::vector<double> goalState();
+    std::cout<<"set Start state"<<std::endl;
     setGoal(std::make_shared<PandaGoal>(si_, panda_, goalVec));
+    std::cout<<"set goal\n";
     double stepSize = 1.0 / PANDA_CTL_RATE; 
     si_->setPropagationStepSize(stepSize);
     si_->setMinMaxControlDuration(1, MAX_NUM_STEPS);
     
     const omplBase::GoalPtr& goal = getGoal();
     si_->setDirectedControlSamplerAllocator(
-        [&goal](const omplControl::SpaceInformation *si)
+        [&goal, robot](const omplControl::SpaceInformation *si)
         {
-            return PandaDirectedControlSamplerAllocator(si, goal, false);
+            return PandaDirectedControlSamplerAllocator(si, goal, robot);
         });
 
     setPlanner(getConfiguredPlannerInstance(plannerName));
-    setStateValidityChecker(std::make_shared<PandaStateValidityChecker>(si_, panda_));
-    setStatePropagator(std::make_shared<PandaStatePropogator>(si_));
 }
 
 omplBase::PlannerPtr PandaSetup::getConfiguredPlannerInstance(const std::string& plannerName)

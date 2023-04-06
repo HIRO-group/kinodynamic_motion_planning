@@ -16,6 +16,7 @@ class PandaSetup : public ompl::control::SimpleSetup
     private:
         std::shared_ptr<RobotInterface> panda_;
         ompl::RNG rng_;
+        
 };
 
 #endif
